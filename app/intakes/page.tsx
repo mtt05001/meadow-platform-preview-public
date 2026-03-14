@@ -1,48 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import IntakeCard from "@/components/intake-card";
 import { toast } from "sonner";
 
-type SortKey = "submitted" | "risk" | "prep1";
-
-const riskOrder: Record<string, number> = {
-  red: 0,
-  yellow: 1,
-  green: 2,
-  unknown: 3,
-};
-
-function sortIntakes(intakes: Intake[], key: SortKey): Intake[] {
-  const sorted = [...intakes];
-  switch (key) {
-    case "risk":
-      sorted.sort(
-        (a, b) =>
-          (riskOrder[a.risk_tier] ?? 3) - (riskOrder[b.risk_tier] ?? 3),
-      );
-      break;
-    case "prep1":
-      sorted.sort((a, b) => {
-        if (!a.prep1_date && !b.prep1_date) return 0;
-        if (!a.prep1_date) return 1;
-        if (!b.prep1_date) return -1;
-        return (
-          new Date(a.prep1_date).getTime() - new Date(b.prep1_date).getTime()
-        );
-      });
-      break;
-    default:
-      sorted.sort(
-        (a, b) =>
-          new Date(b.submitted_at || b.created_at || "").getTime() -
-          new Date(a.submitted_at || a.created_at || "").getTime(),
-      );
-  }
-  return sorted;
+/** Sort by prep 1 date, latest to earliest. No prep1 goes to the end. */
+function sortByPrep1(intakes: Intake[]): Intake[] {
+  return [...intakes].sort((a, b) => {
+    if (!a.prep1_date && !b.prep1_date) return 0;
+    if (!a.prep1_date) return 1;
+    if (!b.prep1_date) return -1;
+    return new Date(b.prep1_date).getTime() - new Date(a.prep1_date).getTime();
+  });
 }
 
 function formatTimestamp(ts: string): string {
@@ -61,7 +32,6 @@ function formatTimestamp(ts: string): string {
 }
 
 export default function IntakesPage() {
-  const [sortKey, setSortKey] = useState<SortKey>("submitted");
   const queryClient = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -101,7 +71,7 @@ export default function IntakesPage() {
     onError: (e) => toast.error("GHL sync failed: " + e.message),
   });
 
-  const sorted = sortIntakes(intakes, sortKey);
+  const sorted = sortByPrep1(intakes);
   const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
   // Completed always sorted by date submitted (newest first) like original
   const reviewed = sorted
@@ -184,24 +154,10 @@ export default function IntakesPage() {
       {/* Content */}
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
         {/* Header row */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6">
           <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
             Review Queue
           </h2>
-          <select
-            id="sort-select"
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as SortKey)}
-            className="
-              px-3.5 py-2 rounded-[6px] bg-white border border-[#e8e2d8]
-              text-[13px] text-[#2c3e50] cursor-pointer
-              focus:outline-none focus:ring-2 focus:ring-[#2d7a4a]/30 focus:border-[#2d7a4a]
-            "
-          >
-            <option value="submitted">Date Submitted</option>
-            <option value="risk">Risk Tier</option>
-            <option value="prep1">Prep 1 Date</option>
-          </select>
         </div>
 
         {isLoading ? (

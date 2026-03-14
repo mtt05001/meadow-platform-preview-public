@@ -7,6 +7,16 @@ import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import RiskTierBadge from "./risk-tier-badge";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
   pending: { label: "Pending Review", bg: "bg-[#fff8e1]", text: "text-[#8a6d00]" },
@@ -63,6 +73,28 @@ function SmallTag({
   );
 }
 
+/* ── Inline icon components (no emoji, clean SVG) ── */
+
+function ArchiveIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="20" height="5" rx="1" />
+      <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+      <path d="M10 12h4" />
+    </svg>
+  );
+}
+
+function TrashIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+    </svg>
+  );
+}
+
 export default function IntakeCard({
   intake,
 }: {
@@ -75,7 +107,6 @@ export default function IntakeCard({
   const isPending = intake.status === "pending";
   const isCompleted = intake.status === "approved" || intake.status === "rejected" || intake.status === "archived";
 
-  // Border by STATUS like original: pending=green, completed=gray
   const borderColor = isPending ? "border-l-[#27ae60]" : "border-l-[#bbb]";
 
   const actionMutation = useMutation({
@@ -93,7 +124,7 @@ export default function IntakeCard({
   });
 
   return (
-    <div className="group relative">
+    <div className="relative">
       <Link href={`/intakes/${intake.id}`} className="block">
         <div
           className={`
@@ -161,7 +192,7 @@ export default function IntakeCard({
               )}
             </div>
 
-            {/* Right side: status + risk badge + action buttons */}
+            {/* Right side: status + risk badge + actions */}
             <div className="flex items-center gap-3 shrink-0">
               <RiskTierBadge tier={intake.risk_tier} />
               <span
@@ -173,102 +204,93 @@ export default function IntakeCard({
               >
                 {status.label}
               </span>
+
+              {/* Inline action buttons — always visible, muted */}
+              {isPending && (
+                <div className="flex items-center gap-0.5 ml-1">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmAction("archive");
+                    }}
+                    className="
+                      flex items-center justify-center w-7 h-7 rounded-md
+                      text-[#b8bfc6] hover:text-[#4a6080] hover:bg-[#f0ede8]
+                      transition-colors cursor-pointer border-none bg-transparent
+                    "
+                    title="Archive"
+                  >
+                    <ArchiveIcon />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setConfirmAction("delete");
+                    }}
+                    className="
+                      flex items-center justify-center w-7 h-7 rounded-md
+                      text-[#b8bfc6] hover:text-[#c0392b] hover:bg-[#fef2f2]
+                      transition-colors cursor-pointer border-none bg-transparent
+                    "
+                    title="Delete"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
+              )}
+              {isCompleted && (
+                <Link
+                  href={`/intakes/${intake.id}?view=readonly`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="
+                    flex items-center justify-center w-7 h-7 rounded-md ml-1
+                    text-[#b8bfc6] hover:text-[#4a6080] hover:bg-[#f0ede8]
+                    transition-colors no-underline
+                  "
+                  title="View only"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </Link>
+              )}
             </div>
           </div>
         </div>
       </Link>
 
-      {/* Action buttons — overlaid on the card, right side */}
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-        {isCompleted && (
-          <Link
-            href={`/intakes/${intake.id}?view=readonly`}
-            onClick={(e) => e.stopPropagation()}
-            className="
-              bg-white border border-[#e8e2d8] text-[#7f8c8d]
-              px-2.5 py-1.5 rounded-[5px] text-[12px] font-sans
-              hover:bg-[#f5f1eb] transition-colors no-underline
-              opacity-0 group-hover:opacity-100
-            "
-          >
-            👁 View Only
-          </Link>
-        )}
-        {isPending && confirmAction === null && (
-          <>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setConfirmAction("archive");
-              }}
-              className="
-                bg-transparent border-none text-[#4a6080] text-[15px]
-                cursor-pointer p-1.5 rounded leading-none
-                opacity-0 group-hover:opacity-50 hover:!opacity-100
-                transition-opacity
-              "
-              title="Archive intake"
-            >
-              🗂
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setConfirmAction("delete");
-              }}
-              className="
-                bg-transparent border-none text-[#c0392b] text-[16px]
-                cursor-pointer p-1.5 rounded leading-none
-                opacity-0 group-hover:opacity-50 hover:!opacity-100
-                transition-opacity
-              "
-              title="Delete intake"
-            >
-              🗑
-            </button>
-          </>
-        )}
-        {isPending && confirmAction && (
-          <span
-            className="flex items-center gap-1.5 text-[12px]"
-            onClick={(e) => e.preventDefault()}
-          >
-            <span className="text-[#666] whitespace-nowrap">
-              {confirmAction === "delete" ? "Delete" : "Archive"} {intake.name?.split(" ")[0]}?
-            </span>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                actionMutation.mutate(confirmAction);
-              }}
+      {/* ── Confirmation dialog ── */}
+      <AlertDialog open={confirmAction !== null} onOpenChange={(open) => { if (!open) setConfirmAction(null); }}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "delete" ? "Delete intake" : "Archive intake"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "delete"
+                ? `Permanently delete ${intake.name || "this intake"}? This cannot be undone.`
+                : `Archive ${intake.name || "this intake"}? You can find it in the archived section later.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant={confirmAction === "delete" ? "destructive" : "default"}
               disabled={actionMutation.isPending}
-              className={`
-                text-white border-none rounded px-2 py-0.5
-                text-[11px] cursor-pointer font-sans
-                ${confirmAction === "delete" ? "bg-[#c0392b]" : "bg-[#4a6080]"}
-              `}
-            >
-              {actionMutation.isPending ? "…" : "Yes"}
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setConfirmAction(null);
+              onClick={() => {
+                if (confirmAction) {
+                  actionMutation.mutate(confirmAction);
+                }
               }}
-              className="
-                bg-white text-[#333] border border-[#ccc] rounded
-                px-2 py-0.5 text-[11px] cursor-pointer font-sans
-              "
             >
-              No
-            </button>
-          </span>
-        )}
-      </div>
+              {actionMutation.isPending ? "..." : confirmAction === "delete" ? "Delete" : "Archive"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
