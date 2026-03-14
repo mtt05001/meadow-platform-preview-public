@@ -1,0 +1,15 @@
+import { NextResponse } from "next/server";
+import { getIntakes, getLastUpdated } from "@/lib/db";
+import { apiError, getErrorMessage } from "@/lib/api-utils";
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get("status") ?? undefined;
+    const intakes = await getIntakes(500, 0, status);
+    const lastUpdated = await getLastUpdated();
+    return NextResponse.json({ intakes, last_updated: lastUpdated });
+  } catch (e) {
+    return apiError(getErrorMessage(e));
+  }
+}

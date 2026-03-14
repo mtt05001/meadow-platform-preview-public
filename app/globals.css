@@ -1,0 +1,175 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Meadow brand colors */
+  --color-meadow: #1a4d2e;
+  --color-meadow-light: #2d7a4a;
+  --color-meadow-muted: #3a8f5c;
+  --color-cream: #f5f1eb;
+  --color-cream-dark: #e8e2d8;
+  --color-cream-warm: #f0ebe3;
+  --color-bark: #2c3e50;
+  --color-bark-light: #7f8c8d;
+  --color-tier-red: #c0392b;
+  --color-tier-red-bg: #fdeaea;
+  --color-tier-yellow: #d4a017;
+  --color-tier-yellow-bg: #fff8e1;
+  --color-tier-green: #27ae60;
+  --color-tier-green-bg: #eafaf1;
+}
+
+:root {
+  --background: #f5f1eb;
+  --foreground: #2c3e50;
+  --card: #fffdf9;
+  --card-foreground: #2c3e50;
+  --popover: #fffdf9;
+  --popover-foreground: #2c3e50;
+  --primary: #1a4d2e;
+  --primary-foreground: #f5f1eb;
+  --secondary: #e8e2d8;
+  --secondary-foreground: #1a4d2e;
+  --muted: #ece7df;
+  --muted-foreground: #7f8c8d;
+  --accent: #eafaf1;
+  --accent-foreground: #1a4d2e;
+  --destructive: #c0392b;
+  --border: #e0d9ce;
+  --input: #e0d9ce;
+  --ring: #2d7a4a;
+  --chart-1: #1a4d2e;
+  --chart-2: #2d7a4a;
+  --chart-3: #27ae60;
+  --chart-4: #d4a017;
+  --chart-5: #c0392b;
+  --radius: 0.5rem;
+  --sidebar: #f5f1eb;
+  --sidebar-foreground: #2c3e50;
+  --sidebar-primary: #1a4d2e;
+  --sidebar-primary-foreground: #f5f1eb;
+  --sidebar-accent: #eafaf1;
+  --sidebar-accent-foreground: #1a4d2e;
+  --sidebar-border: #e0d9ce;
+  --sidebar-ring: #2d7a4a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Quill editor overrides */
+.ql-container {
+  font-family: var(--font-sans), sans-serif !important;
+  font-size: 14px !important;
+  border: none !important;
+}
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #e8e2d8 !important;
+  background: #faf7f2 !important;
+  border-radius: 6px 6px 0 0 !important;
+  padding: 8px !important;
+}
+.ql-snow .ql-editor {
+  min-height: 420px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 14px 16px;
+  line-height: 1.7;
+  color: #2c3e50;
+}
+.ql-snow .ql-editor h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a4d2e;
+  margin: 14px 0 4px;
+}
+.ql-snow .ql-editor h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #444;
+  margin: 10px 0 3px;
+}
+.ql-snow .ql-editor p {
+  margin: 0 0 8px;
+}
+.ql-snow .ql-editor ul,
+.ql-snow .ql-editor ol {
+  margin: 4px 0 8px 18px;
+}
+
+/* Readonly prose styling */
+.ro-content h1,
+.ro-content h2 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 12px 0 4px;
+  color: #2d5016;
+}
+.ro-content h3 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 10px 0 3px;
+}
+.ro-content ul,
+.ro-content ol {
+  margin: 4px 0 8px 18px;
+}
+.ro-content p {
+  margin: 0 0 6px;
+}
