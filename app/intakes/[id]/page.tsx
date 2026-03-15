@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
@@ -81,17 +81,18 @@ export default function IntakeDetailPage() {
 
   const { data: intake, isLoading } = useQuery({
     queryKey: ["intake", id],
-    queryFn: async () => {
-      const data = await apiFetch<Intake>(`/api/intakes/${id}`);
-      const ai = data.ai_output as {
-        risk_stratification?: string;
-        email?: string;
-      } | null;
-      setRiskHtml(toHtml(data.edited_risk_strat || ai?.risk_stratification || ""));
-      setEmailHtml(toHtml(ai?.email || ""));
-      return data;
-    },
+    queryFn: () => apiFetch<Intake>(`/api/intakes/${id}`),
   });
+
+  useEffect(() => {
+    if (!intake) return;
+    const ai = intake.ai_output as {
+      risk_stratification?: string;
+      email?: string;
+    } | null;
+    setRiskHtml(toHtml(intake.edited_risk_strat || ai?.risk_stratification || ""));
+    setEmailHtml(toHtml(ai?.email || ""));
+  }, [intake]);
 
   const isApproved =
     intake?.status === "approved" || intake?.status === "rejected" || intake?.status === "sending";
