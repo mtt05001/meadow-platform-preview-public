@@ -14,15 +14,15 @@ import { auth } from "@clerk/nextjs/server";
 export async function POST() {
   await auth.protect();
   try {
-    // 1. Load existing intake IDs from DB
     const existing = await getIntakes(500);
     const existingIds = new Set(existing.map((i) => i.id));
+    console.log(`[sync-jotform] ${existingIds.size} existing intakes in DB`);
 
-    // 2. Fetch recent Jotform submissions from Jotform API
     const submissions = await fetchRecentSubmissions(undefined, 20);
+    console.log(`[sync-jotform] ${submissions.length} recent submissions from Jotform`);
 
-    // 3. Find new submissions
     const newSubs = submissions.filter((s) => !existingIds.has(String(s.id)));
+    console.log(`[sync-jotform] ${newSubs.length} new submissions to process`);
 
     if (!newSubs.length) {
       return NextResponse.json({
@@ -32,7 +32,6 @@ export async function POST() {
       });
     }
 
-    // 4. Process each new submission
     let newCount = 0;
     const errors: string[] = [];
 
@@ -43,11 +42,12 @@ export async function POST() {
         const { score: softScore, details: softDetails } =
           scoreSoftContraindications(client);
         const { tier, explanation } = assignRiskTier(hardFlags, softScore);
+        console.log(`[sync-jotform] ${client.name}: tier=${tier}, hard=${hardFlags.length}, soft=${softScore}`);
 
-        // AI generation
         const { result: aiOutput } = await generateAiOutput(
           client as unknown as Record<string, unknown>,
         );
+        console.log(`[sync-jotform] ${client.name}: AI output generated`);
 
         await upsertIntake({
           id: String(sub.id),
@@ -66,11 +66,15 @@ export async function POST() {
         });
 
         newCount++;
+        console.log(`[sync-jotform] ${client.name}: saved to DB`);
       } catch (e) {
-        errors.push(`Sub ${sub.id}: ${getErrorMessage(e).slice(0, 100)}`);
+        const msg = getErrorMessage(e).slice(0, 100);
+        console.error(`[sync-jotform] Failed sub ${sub.id}: ${msg}`);
+        errors.push(`Sub ${sub.id}: ${msg}`);
       }
     }
 
+    console.log(`[sync-jotform] Done: ${newCount} new, ${errors.length} errors`);
     return NextResponse.json({
       success: true,
       new_count: newCount,
@@ -78,6 +82,7 @@ export async function POST() {
       message: `Found ${newCount} new intake(s)`,
     });
   } catch (e) {
+    console.error(`[sync-jotform] Fatal error: ${getErrorMessage(e)}`);
     return apiError(getErrorMessage(e));
   }
 }
