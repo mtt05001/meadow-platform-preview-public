@@ -1,23 +1,7 @@
 import { NextResponse } from "next/server";
 import { getIntakes, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator } from "@/lib/ghl";
+import { searchContact, getOpportunityWithFacilitator, GHL_FIELDS, cfVal } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
-
-const FIELD_PREP1 = "47Nj5tCxZy6Zhze9m9c8";
-const FIELD_FACILITATOR = "H4LM6jbUwR1woLSj2kzV";
-
-function cfVal(
-  customFields: { id?: string; fieldValue?: string; fieldValueString?: string; value?: string }[],
-  fieldId: string,
-): string {
-  for (const cf of customFields) {
-    if (cf.id === fieldId) {
-      const v = cf.fieldValue || cf.fieldValueString || cf.value || "";
-      return String(v).trim();
-    }
-  }
-  return "";
-}
 
 function fmtDate(d: string | null): string | null {
   if (!d) return null;
@@ -49,8 +33,8 @@ export async function POST() {
           value?: string;
         }[];
 
-        const prep1 = fmtDate(cfVal(cfs, FIELD_PREP1));
-        const facilitator = cfVal(cfs, FIELD_FACILITATOR) || null;
+        const prep1 = fmtDate(cfVal(cfs, GHL_FIELDS.PREP1_DATE));
+        const facilitator = cfVal(cfs, GHL_FIELDS.LEAD_FACILITATOR) || null;
 
         const fields: Record<string, string | null> = {};
         if (prep1) fields.prep1_date = prep1;
