@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS client_cache (
+  id TEXT PRIMARY KEY DEFAULT 'latest',
+  data JSONB NOT NULL,
+  synced_at TIMESTAMPTZ DEFAULT NOW()
+);

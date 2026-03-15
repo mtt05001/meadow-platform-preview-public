@@ -32,3 +32,43 @@ export interface Intake {
   ai_output: AiOutput | Record<string, never>;
   jotform_data: Record<string, unknown>;
 }
+
+export interface Client {
+  opp_id: string;
+  contact_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  stage_id: string;
+  stage_name: string;
+  stage_order: number;
+  stage_group: "onboarding" | "prep" | "journey" | "integration" | "done";
+  facilitator: string;
+  facilitator_email: string;
+  prep1: string;
+  prep2: string;
+  ip_prep: string;
+  journey: string;
+  ip_integ: string;
+  integ1: string;
+  integ2: string;
+  hi_status: string;
+  oha_status: string;
+  chart_status: string;
+  intake_id: string | null;
+  risk_tier: "red" | "yellow" | "green" | "unknown" | "";
+  risk_explanation: string;
+  hard_contra: HardContraindication[];
+  soft_score: number;
+  soft_details: string[];
+  edited_risk_strat: string;
+  approved_by: string;
+  approved_at: string;
+  intake_url: string;
+}
+
+export interface ClientCache {
+  clients: Client[];
+  last_synced: string;
+  total: number;
+}

@@ -1,6 +1,6 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
-import type { Intake } from "./types";
+import type { Intake, Client, ClientCache } from "./types";
 
 // WebSocket constructor needed for local dev (Vercel provides one natively)
 neonConfig.webSocketConstructor = ws;
@@ -192,4 +192,32 @@ export async function getLastUpdated(): Promise<string> {
     return rows[0].max_updated.toISOString();
   }
   return new Date().toISOString();
+}
+
+// ── Client cache ──────────────────────────────────────────────────────
+
+export async function getClientCache(): Promise<ClientCache | null> {
+  const { rows } = await pool().query(
+    "SELECT data, synced_at FROM client_cache WHERE id = 'latest'",
+  );
+  if (!rows.length) return null;
+  const data = typeof rows[0].data === "string" ? JSON.parse(rows[0].data) : rows[0].data;
+  const synced = rows[0].synced_at instanceof Date
+    ? rows[0].synced_at.toISOString()
+    : String(rows[0].synced_at);
+  return {
+    clients: (data as { clients?: Client[] }).clients || [],
+    last_synced: synced,
+    total: ((data as { clients?: Client[] }).clients || []).length,
+  };
+}
+
+export async function upsertClientCache(clients: Client[]): Promise<void> {
+  const data = JSON.stringify({ clients });
+  await pool().query(
+    `INSERT INTO client_cache (id, data, synced_at)
+     VALUES ('latest', $1::jsonb, NOW())
+     ON CONFLICT (id) DO UPDATE SET data = $1::jsonb, synced_at = NOW()`,
+    [data],
+  );
 }
