@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
@@ -102,6 +103,7 @@ export default function IntakeCard({
 }) {
   const [confirmAction, setConfirmAction] = useState<"archive" | "delete" | null>(null);
   const queryClient = useQueryClient();
+  const router = useRouter();
   const hardCount = intake.hard_contraindications?.length || 0;
   const status = statusConfig[intake.status] || statusConfig.pending;
   const isPending = intake.status === "pending";
@@ -165,7 +167,7 @@ export default function IntakeCard({
                 )}
               </div>
 
-              <p className="text-[13px] text-[#7f8c8d] font-sans">
+              <p className="text-[13px] text-[#7f8c8d]">
                 {intake.submitted_at ? formatDate(intake.submitted_at) : ""}
                 {intake.email && (
                   <span> · {intake.email}</span>
@@ -241,13 +243,16 @@ export default function IntakeCard({
                 </div>
               )}
               {isCompleted && (
-                <Link
-                  href={`/intakes/${intake.id}?view=readonly`}
-                  onClick={(e) => e.stopPropagation()}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(`/intakes/${intake.id}?view=readonly`);
+                  }}
                   className="
                     flex items-center justify-center w-7 h-7 rounded-md ml-1
                     text-[#b8bfc6] hover:text-[#4a6080] hover:bg-[#f0ede8]
-                    transition-colors no-underline
+                    transition-colors cursor-pointer border-none bg-transparent
                   "
                   title="View only"
                 >
@@ -255,7 +260,7 @@ export default function IntakeCard({
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
-                </Link>
+                </button>
               )}
             </div>
           </div>

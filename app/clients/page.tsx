@@ -173,7 +173,7 @@ export default function ClientsPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-40 bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
         <div className="max-w-[1600px] mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-4 no-underline">
             <div className="text-[28px] leading-none select-none" aria-hidden>
               🌿
             </div>
@@ -181,16 +181,16 @@ export default function ClientsPage() {
               <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
                 Meadow Medicine
               </h1>
-              <p className="text-white/70 text-[13px] italic font-serif">
+              <p className="text-white/70 text-[13px] italic">
                 Client List
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-3">
             <Link
               href="/intakes"
-              className="px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold font-serif bg-[#1a4d2e] text-white border border-white/20 hover:bg-[#2d7a4a] transition-all duration-150"
+              className="px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold bg-[#1a4d2e] text-white border border-white/20 hover:bg-[#2d7a4a] transition-all duration-150"
             >
               Intakes
             </Link>
@@ -198,8 +198,7 @@ export default function ClientsPage() {
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isPending}
               className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold font-serif
-                bg-[#1a4d2e] text-white border border-white/20
+                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
                 hover:bg-[#2d7a4a] transition-all duration-150
                 disabled:opacity-50 disabled:cursor-not-allowed
                 flex items-center gap-1.5
@@ -214,7 +213,7 @@ export default function ClientsPage() {
               )}
             </button>
             {lastSynced && (
-              <div className="flex items-center gap-2 text-[13px] text-white/85 font-sans">
+              <div className="flex items-center gap-2 text-[13px] text-white/85">
                 <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
                 <span>Synced {formatTimestamp(lastSynced)}</span>
               </div>
@@ -277,7 +276,7 @@ export default function ClientsPage() {
 
         {/* Table */}
         {isLoading ? (
-          <div className="text-center py-10 text-[#7f8c8d] font-serif">
+          <div className="text-center py-10 text-[#7f8c8d]">
             Loading clients...
           </div>
         ) : clients.length === 0 ? (

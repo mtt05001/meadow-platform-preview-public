@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
@@ -202,7 +203,7 @@ export default function IntakeDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f5f1eb] flex items-center justify-center">
-        <div className="text-center text-[#7f8c8d] font-serif">
+        <div className="text-center text-[#7f8c8d]">
           Loading intake...
         </div>
       </div>
@@ -229,21 +230,19 @@ export default function IntakeDetailPage() {
       {/* Nav */}
       <nav className="bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
         <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 flex items-center gap-4">
-          <div
-            className="text-[28px] leading-none select-none cursor-pointer"
-            onClick={() => router.push("/intakes")}
-            aria-hidden
-          >
-            🌿
-          </div>
-          <div>
-            <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-              Meadow Medicine
-            </h1>
-            <p className="text-white/70 text-[13px] italic font-serif">
-              Health Intake Review Platform
-            </p>
-          </div>
+          <Link href="/" className="flex items-center gap-4 no-underline">
+            <div className="text-[28px] leading-none select-none" aria-hidden>
+              🌿
+            </div>
+            <div>
+              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
+                Meadow Medicine
+              </h1>
+              <p className="text-white/70 text-[13px] italic">
+                Health Intake Review Platform
+              </p>
+            </div>
+          </Link>
         </div>
       </nav>
 
@@ -307,7 +306,7 @@ export default function IntakeDetailPage() {
             </h3>
             <ul className="list-disc ml-5 space-y-1">
               {intake.hard_contraindications.map((c, i) => (
-                <li key={i} className="text-[#c0392b] text-[14px] font-sans">
+                <li key={i} className="text-[#c0392b] text-[14px]">
                   <strong className="capitalize">{c.category}:</strong>{" "}
                   {c.detail}
                 </li>
@@ -338,8 +337,7 @@ export default function IntakeDetailPage() {
                     onClick={() => saveRiskStrat.mutate()}
                     disabled={saveRiskStrat.isPending}
                     className="
-                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold font-serif
-                      bg-[#1a4d2e] text-white
+                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                      bg-[#1a4d2e] text-white
                       hover:opacity-85 transition-opacity
                       disabled:opacity-50 disabled:cursor-not-allowed
                     "
@@ -371,8 +369,7 @@ export default function IntakeDetailPage() {
                     onClick={() => saveEmailDraft.mutate()}
                     disabled={saveEmailDraft.isPending}
                     className="
-                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold font-serif
-                      bg-[#1a4d2e] text-white
+                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                      bg-[#1a4d2e] text-white
                       hover:opacity-85 transition-opacity
                       disabled:opacity-50 disabled:cursor-not-allowed
                     "
@@ -437,11 +434,11 @@ export default function IntakeDetailPage() {
               <div className="text-[16px] font-semibold text-[#1a4d2e] mb-2">
                 💬 Feedback for AI
               </div>
-              <p className="text-[13px] text-[#7f8c8d] font-sans mb-3.5">
+              <p className="text-[13px] text-[#7f8c8d] mb-3.5">
                 Help improve the AI by sharing what could be better
               </p>
               <div className="mb-3">
-                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5 font-sans">
+                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
                   Feedback Type:
                 </label>
                 <select
@@ -462,7 +459,7 @@ export default function IntakeDetailPage() {
                 </select>
               </div>
               <div className="mb-3.5">
-                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5 font-sans">
+                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
                   What should the AI do differently?
                 </label>
                 <textarea
@@ -479,8 +476,7 @@ export default function IntakeDetailPage() {
                 <button
                   onClick={handleSubmitFeedback}
                   className="
-                    px-4 py-2 rounded-[6px] text-[13px] font-semibold font-serif
-                    bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
+                    px-4 py-2 rounded-[6px] text-[13px] font-semibold                    bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
                     hover:bg-[#1a4d2e] hover:text-white transition-all
                   "
                 >
@@ -501,7 +497,7 @@ export default function IntakeDetailPage() {
               >
                 ✅ Approve & Send
               </button>
-              <div className="text-[12px] text-[#7f8c8d] text-left font-sans leading-relaxed">
+              <div className="text-[12px] text-[#7f8c8d] text-left leading-relaxed">
                 <div className="font-semibold text-[#2c3e50] mb-1">
                   When approved, this will:
                 </div>
@@ -517,7 +513,7 @@ export default function IntakeDetailPage() {
 
               {/* Test email */}
               <div className="w-full border-t border-[#e8e2d8] pt-3 mt-1">
-                <div className="text-[12px] font-medium text-[#2c3e50] mb-2 font-sans">
+                <div className="text-[12px] font-medium text-[#2c3e50] mb-2">
                   📤 Send Test Email
                 </div>
                 <div className="flex gap-2 items-center">
@@ -528,15 +524,13 @@ export default function IntakeDetailPage() {
                     onChange={(e) => setTestEmail(e.target.value)}
                     className="
                       flex-1 px-2.5 py-2 border border-[#e8e2d8] rounded-[6px]
-                      text-[13px] font-serif
-                    "
+                      text-[13px]                    "
                   />
                   <button
                     onClick={() => testEmailMutation.mutate()}
                     disabled={testEmailMutation.isPending || !testEmail}
                     className="
-                      px-3 py-2 rounded-[6px] text-[13px] font-semibold font-serif
-                      bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
+                      px-3 py-2 rounded-[6px] text-[13px] font-semibold                      bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
                       hover:bg-[#1a4d2e] hover:text-white transition-all
                       disabled:opacity-50 disabled:cursor-not-allowed
                       whitespace-nowrap

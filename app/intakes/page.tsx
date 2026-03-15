@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import IntakeCard from "@/components/intake-card";
+import Link from "next/link";
 import { toast } from "sonner";
 
 /** Sort by prep 1 date, latest to earliest. No prep1 goes to the end. */
@@ -87,7 +88,7 @@ export default function IntakesPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-40 bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
         <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <Link href="/" className="flex items-center gap-4 no-underline">
             <div className="text-[28px] leading-none select-none" aria-hidden>
               🌿
             </div>
@@ -95,19 +96,18 @@ export default function IntakesPage() {
               <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
                 Meadow Medicine
               </h1>
-              <p className="text-white/70 text-[13px] italic font-serif">
+              <p className="text-white/70 text-[13px] italic">
                 Health Intake Review Platform
               </p>
             </div>
-          </div>
+          </Link>
 
           <div className="flex items-center gap-3">
             <button
               onClick={() => syncGhl.mutate()}
               disabled={syncGhl.isPending}
               className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold font-serif
-                bg-[#1a4d2e] text-white border border-white/20
+                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
                 hover:bg-[#2d7a4a] transition-all duration-150
                 disabled:opacity-50 disabled:cursor-not-allowed
                 flex items-center gap-1.5
@@ -125,8 +125,7 @@ export default function IntakesPage() {
               onClick={() => syncJotform.mutate()}
               disabled={syncJotform.isPending}
               className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold font-serif
-                bg-[#1a4d2e] text-white border border-white/20
+                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
                 hover:bg-[#2d7a4a] transition-all duration-150
                 disabled:opacity-50 disabled:cursor-not-allowed
                 flex items-center gap-1.5
@@ -142,7 +141,7 @@ export default function IntakesPage() {
             </button>
             {/* Timestamp with live dot */}
             {lastUpdated && (
-              <div className="flex items-center gap-2 text-[13px] text-white/85 font-sans">
+              <div className="flex items-center gap-2 text-[13px] text-white/85">
                 <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
                 <span>Updated {formatTimestamp(lastUpdated)}</span>
               </div>
@@ -161,7 +160,7 @@ export default function IntakesPage() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-10 text-[#7f8c8d] font-serif">
+          <div className="text-center py-10 text-[#7f8c8d]">
             Loading intakes...
           </div>
         ) : intakes.length === 0 ? (
@@ -194,7 +193,7 @@ export default function IntakesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-6 text-center text-[#7f8c8d] italic font-serif">
+                <div className="py-6 text-center text-[#7f8c8d] italic">
                   No pending reviews 🎉
                 </div>
               )}
@@ -214,7 +213,7 @@ export default function IntakesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="py-6 text-center text-[#7f8c8d] italic font-serif">
+                <div className="py-6 text-center text-[#7f8c8d] italic">
                   No completed reviews yet
                 </div>
               )}

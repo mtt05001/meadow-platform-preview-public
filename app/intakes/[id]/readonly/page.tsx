@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
@@ -44,7 +45,7 @@ export default function IntakeReadonlyPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#f5f1eb] flex items-center justify-center">
-        <div className="text-[#7f8c8d] font-serif">Loading...</div>
+        <div className="text-[#7f8c8d]">Loading...</div>
       </div>
     );
   }
@@ -96,17 +97,19 @@ export default function IntakeReadonlyPage() {
       {/* Nav */}
       <nav className="bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4 flex items-center gap-4">
-          <div className="text-[28px] leading-none select-none" aria-hidden>
-            🌿
-          </div>
-          <div>
-            <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-              Meadow Medicine
-            </h1>
-            <p className="text-white/70 text-[13px] italic font-serif">
-              Health Intake Review — Read Only
-            </p>
-          </div>
+          <Link href="/" className="flex items-center gap-4 no-underline">
+            <div className="text-[28px] leading-none select-none" aria-hidden>
+              🌿
+            </div>
+            <div>
+              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
+                Meadow Medicine
+              </h1>
+              <p className="text-white/70 text-[13px] italic">
+                Health Intake Review — Read Only
+              </p>
+            </div>
+          </Link>
         </div>
       </nav>
 
@@ -191,7 +194,7 @@ export default function IntakeReadonlyPage() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-8 py-4 text-center text-[11px] text-[#a0998e] font-sans">
+      <footer className="mt-8 py-4 text-center text-[11px] text-[#a0998e]">
         Meadow Medicine — Portland, Oregon
       </footer>
 

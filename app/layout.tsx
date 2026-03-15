@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Nunito } from "next/font/google";
+import { Nunito, Lora } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import Providers from "@/components/providers";
@@ -8,6 +8,11 @@ import "./globals.css";
 
 const nunito = Nunito({
   variable: "--font-sans",
+  subsets: ["latin"],
+});
+
+const lora = Lora({
+  variable: "--font-serif",
   subsets: ["latin"],
 });
 
@@ -28,10 +33,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${nunito.variable} ${geistMono.variable} antialiased`}
-        >
+      <html lang="en" className={`${nunito.variable} ${lora.variable} ${geistMono.variable}`}>
+        <body className="antialiased">
           <Providers>
             {children}
           </Providers>
