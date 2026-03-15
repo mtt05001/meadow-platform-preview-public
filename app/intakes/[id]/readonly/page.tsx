@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import { marked } from "marked";
 import type { Intake } from "@/lib/types";
+import Nav from "@/components/nav";
 
 /** Convert markdown or raw text to HTML; pass through if already HTML */
 function toHtml(text: string): string {
@@ -94,24 +94,7 @@ export default function IntakeReadonlyPage() {
     <div className="min-h-screen bg-[#f5f1eb]">
       <style dangerouslySetInnerHTML={{ __html: contentCss }} />
 
-      {/* Nav */}
-      <nav className="bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8 py-4 flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-4 no-underline">
-            <div className="text-[28px] leading-none select-none" aria-hidden>
-              🌿
-            </div>
-            <div>
-              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-                Meadow Medicine
-              </h1>
-              <p className="text-white/70 text-[13px] italic">
-                Health Intake Review — Read Only
-              </p>
-            </div>
-          </Link>
-        </div>
-      </nav>
+      <Nav subtitle="Health Intake Review — Read Only" />
 
       <main className="max-w-[1200px] mx-auto px-6 md:px-8 py-6">
         {/* Header row */}

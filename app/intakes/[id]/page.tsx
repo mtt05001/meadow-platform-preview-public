@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import { marked } from "marked";
 import type { Intake } from "@/lib/types";
+import Nav from "@/components/nav";
 import RiskTierBadge from "@/components/risk-tier-badge";
 import {
   Dialog,
@@ -227,24 +227,7 @@ export default function IntakeDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
-      {/* Nav */}
-      <nav className="bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-4 no-underline">
-            <div className="text-[28px] leading-none select-none" aria-hidden>
-              🌿
-            </div>
-            <div>
-              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-                Meadow Medicine
-              </h1>
-              <p className="text-white/70 text-[13px] italic">
-                Health Intake Review Platform
-              </p>
-            </div>
-          </Link>
-        </div>
-      </nav>
+      <Nav />
 
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
         {/* Back link */}

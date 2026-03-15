@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getClientCache } from "@/lib/db";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET() {
+  await auth.protect();
   try {
     const cache = await getClientCache();
     if (!cache) {

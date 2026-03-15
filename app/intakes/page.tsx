@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import IntakeCard from "@/components/intake-card";
-import Link from "next/link";
+import Nav from "@/components/nav";
 import { toast } from "sonner";
 
 /** Sort by prep 1 date, latest to earliest. No prep1 goes to the end. */
@@ -85,70 +85,52 @@ export default function IntakesPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
-        <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-4 no-underline">
-            <div className="text-[28px] leading-none select-none" aria-hidden>
-              🌿
-            </div>
-            <div>
-              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-                Meadow Medicine
-              </h1>
-              <p className="text-white/70 text-[13px] italic">
-                Health Intake Review Platform
-              </p>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => syncGhl.mutate()}
-              disabled={syncGhl.isPending}
-              className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
-                hover:bg-[#2d7a4a] transition-all duration-150
-                disabled:opacity-50 disabled:cursor-not-allowed
-                flex items-center gap-1.5
-              "
-            >
-              {syncGhl.isPending ? (
-                <>
-                  <Spinner /> Syncing...
-                </>
-              ) : (
-                "🔄 Sync GHL"
-              )}
-            </button>
-            <button
-              onClick={() => syncJotform.mutate()}
-              disabled={syncJotform.isPending}
-              className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
-                hover:bg-[#2d7a4a] transition-all duration-150
-                disabled:opacity-50 disabled:cursor-not-allowed
-                flex items-center gap-1.5
-              "
-            >
-              {syncJotform.isPending ? (
-                <>
-                  <Spinner /> Syncing...
-                </>
-              ) : (
-                "🔄 Refresh"
-              )}
-            </button>
-            {/* Timestamp with live dot */}
-            {lastUpdated && (
-              <div className="flex items-center gap-2 text-[13px] text-white/85">
-                <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-                <span>Updated {formatTimestamp(lastUpdated)}</span>
-              </div>
-            )}
+      <Nav sticky>
+        <button
+          onClick={() => syncGhl.mutate()}
+          disabled={syncGhl.isPending}
+          className="
+            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
+            bg-[#1a4d2e] text-white border border-white/20
+            hover:bg-[#2d7a4a] transition-all duration-150
+            disabled:opacity-50 disabled:cursor-not-allowed
+            flex items-center gap-1.5
+          "
+        >
+          {syncGhl.isPending ? (
+            <>
+              <Spinner /> Syncing...
+            </>
+          ) : (
+            "🔄 Sync GHL"
+          )}
+        </button>
+        <button
+          onClick={() => syncJotform.mutate()}
+          disabled={syncJotform.isPending}
+          className="
+            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
+            bg-[#1a4d2e] text-white border border-white/20
+            hover:bg-[#2d7a4a] transition-all duration-150
+            disabled:opacity-50 disabled:cursor-not-allowed
+            flex items-center gap-1.5
+          "
+        >
+          {syncJotform.isPending ? (
+            <>
+              <Spinner /> Syncing...
+            </>
+          ) : (
+            "🔄 Refresh"
+          )}
+        </button>
+        {lastUpdated && (
+          <div className="flex items-center gap-2 text-[13px] text-white/85">
+            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
+            <span>Updated {formatTimestamp(lastUpdated)}</span>
           </div>
-        </div>
-      </nav>
+        )}
+      </Nav>
 
       {/* Content */}
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">

@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Client, ClientCache } from "@/lib/types";
 import ClientDrawer from "@/components/client-drawer";
+import Nav from "@/components/nav";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
@@ -170,57 +171,39 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)]">
-        <div className="max-w-[1600px] mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-4 no-underline">
-            <div className="text-[28px] leading-none select-none" aria-hidden>
-              🌿
-            </div>
-            <div>
-              <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
-                Meadow Medicine
-              </h1>
-              <p className="text-white/70 text-[13px] italic">
-                Client List
-              </p>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/intakes"
-              className="px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold bg-[#1a4d2e] text-white border border-white/20 hover:bg-[#2d7a4a] transition-all duration-150"
-            >
-              Intakes
-            </Link>
-            <button
-              onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending}
-              className="
-                px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold                bg-[#1a4d2e] text-white border border-white/20
-                hover:bg-[#2d7a4a] transition-all duration-150
-                disabled:opacity-50 disabled:cursor-not-allowed
-                flex items-center gap-1.5
-              "
-            >
-              {syncMutation.isPending ? (
-                <>
-                  <Spinner /> Syncing...
-                </>
-              ) : (
-                "Sync GHL"
-              )}
-            </button>
-            {lastSynced && (
-              <div className="flex items-center gap-2 text-[13px] text-white/85">
-                <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-                <span>Synced {formatTimestamp(lastSynced)}</span>
-              </div>
-            )}
+      <Nav subtitle="Client List" sticky>
+        <Link
+          href="/intakes"
+          className="px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold bg-[#1a4d2e] text-white border border-white/20 hover:bg-[#2d7a4a] transition-all duration-150 no-underline"
+        >
+          Intakes
+        </Link>
+        <button
+          onClick={() => syncMutation.mutate()}
+          disabled={syncMutation.isPending}
+          className="
+            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
+            bg-[#1a4d2e] text-white border border-white/20
+            hover:bg-[#2d7a4a] transition-all duration-150
+            disabled:opacity-50 disabled:cursor-not-allowed
+            flex items-center gap-1.5
+          "
+        >
+          {syncMutation.isPending ? (
+            <>
+              <Spinner /> Syncing...
+            </>
+          ) : (
+            "Sync GHL"
+          )}
+        </button>
+        {lastSynced && (
+          <div className="flex items-center gap-2 text-[13px] text-white/85">
+            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
+            <span>Synced {formatTimestamp(lastSynced)}</span>
           </div>
-        </div>
-      </nav>
+        )}
+      </Nav>
 
       {/* Filters */}
       <main className="max-w-[1600px] mx-auto px-6 md:px-8 py-6">

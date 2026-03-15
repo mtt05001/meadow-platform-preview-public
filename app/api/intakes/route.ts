@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { getIntakes, getLastUpdated } from "@/lib/db";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(request: Request) {
+  await auth.protect();
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") ?? undefined;

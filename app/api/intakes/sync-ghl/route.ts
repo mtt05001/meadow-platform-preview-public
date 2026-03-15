@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getIntakes, updateIntakeFields } from "@/lib/db";
 import { searchContact, getOpportunityWithFacilitator, GHL_FIELDS, cfVal } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 
 function fmtDate(d: string | null): string | null {
   if (!d) return null;
@@ -9,6 +10,7 @@ function fmtDate(d: string | null): string | null {
 }
 
 export async function POST() {
+  await auth.protect();
   try {
     const intakes = await getIntakes(500);
     const toSync = intakes.filter(

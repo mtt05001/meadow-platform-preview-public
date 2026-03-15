@@ -9,8 +9,10 @@ import {
 } from "@/lib/risk-engine";
 import { generateAiOutput } from "@/lib/ai";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST() {
+  await auth.protect();
   try {
     // 1. Load existing intake IDs from DB
     const existing = await getIntakes(500);

@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/gmail";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: Request) {
+  await auth.protect();
   try {
     const body = await request.json();
     const to = body.to;

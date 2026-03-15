@@ -12,6 +12,7 @@ import {
   parseOhaStatus,
 } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { auth } from "@clerk/nextjs/server";
 import type { Client } from "@/lib/types";
 
 export const maxDuration = 120;
@@ -26,6 +27,7 @@ function sleep(ms: number) {
 }
 
 export async function POST() {
+  await auth.protect();
   try {
     // 1. Fetch all pipeline opps
     const allOpps = await searchPipelineOpportunities(PIPELINE_ID);
