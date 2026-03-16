@@ -22,29 +22,28 @@ export async function POST(request: NextRequest) {
 
   let rawBody: string | undefined;
   try {
-    // Jotform sends application/x-www-form-urlencoded with a rawRequest field
+    // Jotform sends application/x-www-form-urlencoded with multiple fields:
+    // - submissionID (top-level form field — the actual ID)
+    // - formID (top-level form field)
+    // - rawRequest (JSON blob with all form answers)
     const formData = await request.formData();
-    const rawRequest = formData.get("rawRequest");
 
-    if (!rawRequest || typeof rawRequest !== "string") {
-      // Log what we actually got so we can debug payload format issues
-      const keys = [...formData.keys()];
-      console.error(`[jotform-webhook] Missing rawRequest. FormData keys: ${keys.join(", ")}`);
-      return NextResponse.json({ error: "Missing rawRequest" }, { status: 400 });
-    }
-
-    rawBody = rawRequest;
-    const payload = JSON.parse(rawRequest) as Record<string, unknown>;
-    console.log(`[jotform-webhook] Payload keys: ${Object.keys(payload).join(", ")}`);
-    console.log(`[jotform-webhook] Payload preview: ${rawRequest.slice(0, 500)}`);
-
+    // Submission ID is a top-level form field, NOT inside rawRequest
     const submissionId = String(
-      payload.submissionID || payload.submission_id || payload.id || payload.slug || "",
+      formData.get("submissionID") || formData.get("submission_id") || "",
     );
-    console.log(`[jotform-webhook] Submission ID: ${submissionId}`);
+    console.log(`[jotform-webhook] Submission ID: ${submissionId}, Form ID: ${formData.get("formID")}`);
 
     if (!submissionId) {
-      console.error("[jotform-webhook] No submission ID found in payload");
+      const keys = [...formData.keys()];
+      console.error(`[jotform-webhook] No submission ID. FormData keys: ${keys.join(", ")}`);
+
+      // Fallback: try rawRequest for event_id
+      const rawRequest = formData.get("rawRequest");
+      if (rawRequest && typeof rawRequest === "string") {
+        const payload = JSON.parse(rawRequest) as Record<string, unknown>;
+        console.error(`[jotform-webhook] rawRequest keys: ${Object.keys(payload).join(", ")}`);
+      }
       return NextResponse.json({ error: "Missing submission ID" }, { status: 400 });
     }
 
