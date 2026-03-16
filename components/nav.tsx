@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
+
+const navLinks = [
+  { href: "/intakes", label: "Intakes" },
+  { href: "/clients", label: "Clients" },
+];
 
 export default function Nav({
   subtitle = "Health Intake Review Platform",
@@ -12,6 +18,8 @@ export default function Nav({
   sticky?: boolean;
   children?: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
   return (
     <nav
       className={`bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)] ${sticky ? "sticky top-0 z-40" : ""}`}
@@ -29,13 +37,23 @@ export default function Nav({
           </div>
         </Link>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/clients"
-            className="text-white/80 hover:text-white text-sm no-underline transition-colors"
-          >
-            Clients
-          </Link>
+        <div className="flex items-center gap-4">
+          {navLinks.map(({ href, label }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium no-underline transition-all ${
+                  active
+                    ? "bg-white/15 text-white"
+                    : "text-white/65 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
           {children}
           <UserButton />
         </div>
