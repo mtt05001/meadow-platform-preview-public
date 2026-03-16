@@ -162,7 +162,7 @@ export default function IntakesPage() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Needs Review — always shown */}
+            {/* Needs Review — paginated */}
             <section>
               <div className="mb-2 pb-2.5 border-b-2 border-[#1a4d2e] flex items-center justify-between">
                 <h3 className="text-[16px] font-semibold text-[#1a4d2e]">
@@ -170,39 +170,19 @@ export default function IntakesPage() {
                 </h3>
               </div>
               {needsReview.length > 0 ? (
-                <div className="space-y-4">
-                  {needsReview.map((intake) => (
-                    <IntakeCard
-                      key={intake.id}
-                      intake={intake}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="py-6 text-center text-[#7f8c8d] italic">
-                  No pending reviews 🎉
-                </div>
-              )}
-            </section>
-
-            {/* Review Complete — paginated */}
-            <section>
-              <div className="mb-2 pb-2.5 border-b-2 border-[#e8e2d8] flex items-center">
-                <h3 className="text-[16px] font-semibold text-[#7f8c8d]">
-                  ✅ Review Complete ({reviewed.length})
-                </h3>
-              </div>
-              {reviewed.length > 0 ? (
                 <>
                   <div className="space-y-4">
-                    {reviewed.slice(0, visibleCount).map((intake) => (
-                      <IntakeCard key={intake.id} intake={intake} />
+                    {needsReview.slice(0, visibleCount).map((intake) => (
+                      <IntakeCard
+                        key={intake.id}
+                        intake={intake}
+                      />
                     ))}
                   </div>
-                  {visibleCount < reviewed.length && (
+                  {visibleCount < needsReview.length && (
                     <div className="flex items-center justify-center gap-3 mt-5">
                       <span className="text-[13px] text-[#7f8c8d]">
-                        Showing {Math.min(visibleCount, reviewed.length)} of {reviewed.length}
+                        Showing {Math.min(visibleCount, needsReview.length)} of {needsReview.length}
                       </span>
                       <button
                         onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
@@ -217,6 +197,26 @@ export default function IntakesPage() {
                     </div>
                   )}
                 </>
+              ) : (
+                <div className="py-6 text-center text-[#7f8c8d] italic">
+                  No pending reviews 🎉
+                </div>
+              )}
+            </section>
+
+            {/* Review Complete */}
+            <section>
+              <div className="mb-2 pb-2.5 border-b-2 border-[#e8e2d8] flex items-center">
+                <h3 className="text-[16px] font-semibold text-[#7f8c8d]">
+                  ✅ Review Complete ({reviewed.length})
+                </h3>
+              </div>
+              {reviewed.length > 0 ? (
+                <div className="space-y-4">
+                  {reviewed.map((intake) => (
+                    <IntakeCard key={intake.id} intake={intake} />
+                  ))}
+                </div>
               ) : (
                 <div className="py-6 text-center text-[#7f8c8d] italic">
                   No completed reviews yet
