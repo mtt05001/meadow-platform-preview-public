@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
-import RiskTierBadge from "./risk-tier-badge";
+
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -104,7 +104,6 @@ export default function IntakeCard({
   const [confirmAction, setConfirmAction] = useState<"archive" | "delete" | null>(null);
   const queryClient = useQueryClient();
   const router = useRouter();
-  const hardCount = intake.hard_contraindications?.length || 0;
   const status = statusConfig[intake.status] || statusConfig.pending;
   const isPending = intake.status === "pending";
   const isCompleted = intake.status === "approved" || intake.status === "rejected" || intake.status === "archived";
@@ -177,26 +176,10 @@ export default function IntakeCard({
                 )}
               </p>
 
-              {/* Flags row */}
-              {(hardCount > 0 || intake.soft_score > 0) && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                  {hardCount > 0 && (
-                    <SmallTag className="bg-[#fdeaea] text-[#c0392b]">
-                      {hardCount} hard flag{hardCount > 1 ? "s" : ""}
-                    </SmallTag>
-                  )}
-                  {intake.soft_score > 0 && (
-                    <SmallTag className="bg-[#fff8e1] text-[#856404]">
-                      Soft: {intake.soft_score}
-                    </SmallTag>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Right side: status + risk badge + actions */}
+            {/* Right side: status + actions */}
             <div className="flex items-center gap-3 shrink-0">
-              <RiskTierBadge tier={intake.risk_tier} />
               <span
                 className={`
                   rounded-full px-3 py-1 text-[12px] font-semibold

@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import IntakeCard from "@/components/intake-card";
 import Nav from "@/components/nav";
 import { toast } from "sonner";
+
+const PAGE_SIZE = 50;
 
 /** Sort by prep 1 date, latest to earliest. No prep1 goes to the end. */
 function sortByPrep1(intakes: Intake[]): Intake[] {
@@ -34,6 +37,7 @@ function formatTimestamp(ts: string): string {
 
 export default function IntakesPage() {
   const queryClient = useQueryClient();
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   const { data, isLoading } = useQuery({
     queryKey: ["intakes"],
@@ -181,7 +185,7 @@ export default function IntakesPage() {
               )}
             </section>
 
-            {/* Review Complete — always shown */}
+            {/* Review Complete — paginated */}
             <section>
               <div className="mb-2 pb-2.5 border-b-2 border-[#e8e2d8] flex items-center">
                 <h3 className="text-[16px] font-semibold text-[#7f8c8d]">
@@ -189,11 +193,30 @@ export default function IntakesPage() {
                 </h3>
               </div>
               {reviewed.length > 0 ? (
-                <div className="space-y-4">
-                  {reviewed.map((intake) => (
-                    <IntakeCard key={intake.id} intake={intake} />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-4">
+                    {reviewed.slice(0, visibleCount).map((intake) => (
+                      <IntakeCard key={intake.id} intake={intake} />
+                    ))}
+                  </div>
+                  {visibleCount < reviewed.length && (
+                    <div className="flex items-center justify-center gap-3 mt-5">
+                      <span className="text-[13px] text-[#7f8c8d]">
+                        Showing {Math.min(visibleCount, reviewed.length)} of {reviewed.length}
+                      </span>
+                      <button
+                        onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+                        className="
+                          px-4 py-2 rounded-[6px] text-[13px] font-semibold
+                          bg-white border border-[#e8e2d8] text-[#2c3e50]
+                          hover:bg-[#f5f1eb] transition-colors cursor-pointer
+                        "
+                      >
+                        Show more
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="py-6 text-center text-[#7f8c8d] italic">
                   No completed reviews yet

@@ -1,6 +1,6 @@
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import ws from "ws";
-import type { Intake, Client, ClientCache } from "./types";
+import type { Intake, Client, ClientCache, AiFeedback } from "./types";
 
 // WebSocket constructor needed for local dev (Vercel provides one natively)
 neonConfig.webSocketConstructor = ws;
@@ -220,4 +220,35 @@ export async function upsertClientCache(clients: Client[]): Promise<void> {
      ON CONFLICT (id) DO UPDATE SET data = $1::jsonb, synced_at = NOW()`,
     [data],
   );
+}
+
+// ── AI Feedback ──────────────────────────────────────────────────────
+
+export async function insertFeedback(
+  intakeId: string,
+  feedbackType: string,
+  feedbackText: string,
+  reviewer: string,
+): Promise<void> {
+  await pool().query(
+    `INSERT INTO ai_feedback (intake_id, feedback_type, feedback_text, reviewer)
+     VALUES ($1, $2, $3, $4)`,
+    [intakeId, feedbackType, feedbackText, reviewer],
+  );
+}
+
+export async function getFeedbackByIntake(intakeId: string): Promise<AiFeedback[]> {
+  const { rows } = await pool().query(
+    `SELECT id, intake_id, feedback_type, feedback_text, reviewer, created_at
+     FROM ai_feedback WHERE intake_id = $1 ORDER BY created_at DESC`,
+    [intakeId],
+  );
+  return rows.map((r) => ({
+    id: r.id as number,
+    intake_id: r.intake_id as string,
+    feedback_type: r.feedback_type as string,
+    feedback_text: r.feedback_text as string,
+    reviewer: r.reviewer as string,
+    created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+  }));
 }

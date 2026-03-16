@@ -33,6 +33,15 @@ export interface Intake {
   jotform_data: Record<string, unknown>;
 }
 
+export interface AiFeedback {
+  id: number;
+  intake_id: string;
+  feedback_type: string;
+  feedback_text: string;
+  reviewer: string;
+  created_at: string;
+}
+
 export interface Client {
   opp_id: string;
   contact_id: string;

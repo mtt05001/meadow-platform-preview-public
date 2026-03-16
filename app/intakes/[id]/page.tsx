@@ -2,13 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import { marked } from "marked";
 import type { Intake } from "@/lib/types";
 import Nav from "@/components/nav";
 import RiskTierBadge from "@/components/risk-tier-badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -68,6 +78,7 @@ function toHtml(text: string): string {
 export default function IntakeDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const id = params.id as string;
 
   const [riskHtml, setRiskHtml] = useState("");
@@ -78,6 +89,7 @@ export default function IntakeDetailPage() {
   const [pdfOpen, setPdfOpen] = useState(false);
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
+  const [regenerateOpen, setRegenerateOpen] = useState(false);
 
   const { data: intake, isLoading } = useQuery({
     queryKey: ["intake", id],
@@ -96,6 +108,8 @@ export default function IntakeDetailPage() {
 
   const isApproved =
     intake?.status === "approved" || intake?.status === "rejected" || intake?.status === "sending";
+
+  const aiEmpty = !riskHtml && !emailHtml;
 
   const saveRiskStrat = useMutation({
     mutationFn: () =>
@@ -170,10 +184,40 @@ export default function IntakeDetailPage() {
     onError: (e) => toast.error("Send failed: " + e.message),
   });
 
+  const regenerateAi = useMutation({
+    mutationFn: () =>
+      apiFetch<{ success: boolean }>(`/api/intakes/${id}/regenerate-ai`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      toast.success("AI output regenerated");
+      queryClient.invalidateQueries({ queryKey: ["intake", id] });
+      setRegenerateOpen(false);
+    },
+    onError: (e) => {
+      toast.error("Regeneration failed: " + e.message);
+      setRegenerateOpen(false);
+    },
+  });
+
   const handleApprove = () => {
     if (!approverName.trim()) return;
     approveMutation.mutate();
   };
+
+  const submitFeedback = useMutation({
+    mutationFn: () =>
+      apiFetch<{ success: boolean }>(`/api/intakes/${id}/feedback`, {
+        method: "POST",
+        body: { feedback_type: feedbackType, feedback_text: feedbackText },
+      }),
+    onSuccess: () => {
+      toast.success("Feedback saved! Thank you for helping improve the AI.");
+      setFeedbackType("");
+      setFeedbackText("");
+    },
+    onError: (e) => toast.error("Failed to save feedback: " + e.message),
+  });
 
   const handleSubmitFeedback = () => {
     if (!feedbackType) {
@@ -184,21 +228,7 @@ export default function IntakeDetailPage() {
       toast.error("Please enter your feedback");
       return;
     }
-    // Store locally — same as original (localStorage-based)
-    const feedbackLog = JSON.parse(
-      localStorage.getItem("ai_feedback_log") || "[]",
-    );
-    feedbackLog.push({
-      intake_id: id,
-      client_name: intake?.name || "Unknown",
-      feedback_type: feedbackType,
-      feedback_text: feedbackText,
-      timestamp: new Date().toISOString(),
-    });
-    localStorage.setItem("ai_feedback_log", JSON.stringify(feedbackLog));
-    toast.success("Feedback saved! Thank you for helping improve the AI.");
-    setFeedbackType("");
-    setFeedbackText("");
+    submitFeedback.mutate();
   };
 
   if (isLoading) {
@@ -304,6 +334,27 @@ export default function IntakeDetailPage() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Empty AI output banner */}
+        {aiEmpty && !isApproved && (
+          <div className="bg-[#fff8e1] border-2 border-[#d4a017] rounded-[10px] px-6 py-4 mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="text-[15px] font-semibold text-[#856404] mb-0.5">
+                AI output not available for this intake
+              </h3>
+              <p className="text-[13px] text-[#856404]/80">
+                The risk stratification and medication guidance were not generated. You can regenerate them now.
+              </p>
+            </div>
+            <Button
+              onClick={() => setRegenerateOpen(true)}
+              disabled={regenerateAi.isPending}
+              className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a] shrink-0 ml-4"
+            >
+              {regenerateAi.isPending ? "Generating..." : "Regenerate AI"}
+            </Button>
           </div>
         )}
 
@@ -467,12 +518,14 @@ export default function IntakeDetailPage() {
               <div className="flex justify-end">
                 <button
                   onClick={handleSubmitFeedback}
+                  disabled={submitFeedback.isPending}
                   className="
                     px-4 py-2 rounded-[6px] text-[13px] font-semibold                    bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
                     hover:bg-[#1a4d2e] hover:text-white transition-all
+                    disabled:opacity-50 disabled:cursor-not-allowed
                   "
                 >
-                  📝 Submit Feedback
+                  {submitFeedback.isPending ? "Saving..." : "📝 Submit Feedback"}
                 </button>
               </div>
             </div>
@@ -576,6 +629,30 @@ export default function IntakeDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Regenerate AI confirmation */}
+      <AlertDialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Regenerate AI Output</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will call the AI to generate a new risk stratification and
+              medication guidance email for this intake. Any existing AI output
+              will be overwritten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={regenerateAi.isPending}
+              className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a]"
+              onClick={() => regenerateAi.mutate()}
+            >
+              {regenerateAi.isPending ? "Generating..." : "Regenerate"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* PDF Viewer Modal */}
       {pdfOpen && (
