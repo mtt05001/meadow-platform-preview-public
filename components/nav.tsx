@@ -30,6 +30,12 @@ export default function Nav({
         </Link>
 
         <div className="flex items-center gap-3">
+          <Link
+            href="/clients"
+            className="text-white/80 hover:text-white text-sm no-underline transition-colors"
+          >
+            Clients
+          </Link>
           {children}
           <UserButton />
         </div>
