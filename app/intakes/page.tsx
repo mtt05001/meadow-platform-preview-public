@@ -91,6 +91,12 @@ export default function IntakesPage() {
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
       <Nav sticky>
+        {lastUpdated && (
+          <div className="flex items-center gap-2 text-[13px] text-white/85">
+            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
+            <span>Updated {formatTimestamp(lastUpdated)}</span>
+          </div>
+        )}
         <button
           onClick={() => syncGhl.mutate()}
           disabled={syncGhl.isPending}
@@ -129,12 +135,6 @@ export default function IntakesPage() {
             "🔄 Refresh"
           )}
         </button>
-        {lastUpdated && (
-          <div className="flex items-center gap-2 text-[13px] text-white/85">
-            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-            <span>Updated {formatTimestamp(lastUpdated)}</span>
-          </div>
-        )}
       </Nav>
 
       {/* Content */}
