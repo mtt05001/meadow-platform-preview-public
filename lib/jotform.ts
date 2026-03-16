@@ -35,12 +35,6 @@ export async function fetchSubmissionPdf(
   formId = DEFAULT_FORM_ID,
 ): Promise<Response> {
   const key = getApiKey();
-  const url = `${JOTFORM_BASE}/submission/${submissionId}/pdf?apiKey=${key}`;
-  const res = await fetch(url);
-  if (!res.ok) {
-    // Fallback: try the form-level PDF endpoint
-    const fallback = `${JOTFORM_BASE}/form/${formId}/submission/${submissionId}?apiKey=${key}&format=pdf`;
-    return fetch(fallback);
-  }
-  return res;
+  const url = `https://www.jotform.com/server.php?action=getSubmissionPDF&sid=${submissionId}&formID=${formId}&apiKey=${key}`;
+  return fetch(url);
 }

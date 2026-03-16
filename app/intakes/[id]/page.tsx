@@ -253,14 +253,12 @@ export default function IntakeDetailPage() {
             <span className="text-[#2c3e50]"> — {headerInfo}</span>
           )}
           {jfId && (
-            <>
-              <a
-                onClick={() => setPdfOpen(true)}
-                className="text-[14px] font-normal text-[#2d7a4a] underline ml-3 cursor-pointer hover:text-[#1a4d2e]"
-              >
-                📄 View Original Intake
-              </a>
-            </>
+            <button
+              onClick={() => setPdfOpen(true)}
+              className="text-[14px] font-normal text-[#2d7a4a] underline ml-3 hover:text-[#1a4d2e] bg-transparent border-none"
+            >
+              📄 View Original Intake
+            </button>
           )}
         </div>
 

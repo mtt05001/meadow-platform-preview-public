@@ -4,13 +4,15 @@ import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   await auth.protect();
   try {
     const { id } = await params;
-    const pdfResponse = await fetchSubmissionPdf(id);
+    const { searchParams } = new URL(request.url);
+    const formId = searchParams.get("form_id") || undefined;
+    const pdfResponse = await fetchSubmissionPdf(id, formId);
     if (!pdfResponse.ok) {
       return apiError("PDF not found", 404);
     }
