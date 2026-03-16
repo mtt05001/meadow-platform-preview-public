@@ -126,7 +126,7 @@ export default function IntakeCard({
 
   return (
     <div className="relative">
-      <Link href={`/intakes/${intake.id}`} className="block">
+      <Link href={`/intakes/${intake.id}`} prefetch={false} className="block">
         <div
           className={`
             relative bg-white rounded-[10px] border border-transparent
