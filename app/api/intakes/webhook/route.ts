@@ -35,11 +35,16 @@ export async function POST(request: NextRequest) {
 
     rawBody = rawRequest;
     const payload = JSON.parse(rawRequest) as Record<string, unknown>;
-    const submissionId = String(payload.submissionID || payload.id || "");
+    console.log(`[jotform-webhook] Payload keys: ${Object.keys(payload).join(", ")}`);
+    console.log(`[jotform-webhook] Payload preview: ${rawRequest.slice(0, 500)}`);
+
+    const submissionId = String(
+      payload.submissionID || payload.submission_id || payload.id || payload.slug || "",
+    );
     console.log(`[jotform-webhook] Submission ID: ${submissionId}`);
 
     if (!submissionId) {
-      console.error("[jotform-webhook] No submission ID in payload");
+      console.error("[jotform-webhook] No submission ID found in payload");
       return NextResponse.json({ error: "Missing submission ID" }, { status: 400 });
     }
 
