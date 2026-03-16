@@ -7,7 +7,6 @@ import type { Client, ClientCache } from "@/lib/types";
 import ClientDrawer from "@/components/client-drawer";
 import Nav from "@/components/nav";
 import { toast } from "sonner";
-import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -172,12 +171,6 @@ export default function ClientsPage() {
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
       <Nav subtitle="Client List" sticky>
-        <Link
-          href="/intakes"
-          className="px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold bg-[#1a4d2e] text-white border border-white/20 hover:bg-[#2d7a4a] transition-all duration-150 no-underline"
-        >
-          Intakes
-        </Link>
         <button
           onClick={() => syncMutation.mutate()}
           disabled={syncMutation.isPending}
