@@ -6,6 +6,7 @@ import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
 import IntakeCard from "@/components/intake-card";
 import Nav from "@/components/nav";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 50;
@@ -161,14 +162,17 @@ export default function IntakesPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {/* Needs Review — paginated */}
-            <section>
-              <div className="mb-2 pb-2.5 border-b-2 border-[#1a4d2e] flex items-center justify-between">
-                <h3 className="text-[16px] font-semibold text-[#1a4d2e]">
-                  📋 Needs Review ({needsReview.length})
-                </h3>
-              </div>
+          <Tabs defaultValue="needs-review" className="gap-4">
+            <TabsList variant="line" className="gap-0">
+              <TabsTrigger value="needs-review" className="text-[15px] px-4 py-2">
+                Needs Review ({needsReview.length})
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="text-[15px] px-4 py-2">
+                Completed ({reviewed.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="needs-review">
               {needsReview.length > 0 ? (
                 <>
                   <div className="space-y-4">
@@ -202,15 +206,9 @@ export default function IntakesPage() {
                   No pending reviews 🎉
                 </div>
               )}
-            </section>
+            </TabsContent>
 
-            {/* Review Complete */}
-            <section>
-              <div className="mb-2 pb-2.5 border-b-2 border-[#e8e2d8] flex items-center">
-                <h3 className="text-[16px] font-semibold text-[#7f8c8d]">
-                  ✅ Review Complete ({reviewed.length})
-                </h3>
-              </div>
+            <TabsContent value="completed">
               {reviewed.length > 0 ? (
                 <div className="space-y-4">
                   {reviewed.map((intake) => (
@@ -222,8 +220,8 @@ export default function IntakesPage() {
                   No completed reviews yet
                 </div>
               )}
-            </section>
-          </div>
+            </TabsContent>
+          </Tabs>
         )}
       </main>
     </div>
