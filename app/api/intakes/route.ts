@@ -8,7 +8,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") ?? undefined;
-    const intakes = await getIntakes(500, 0, status);
+    const search = searchParams.get("search") ?? undefined;
+    const intakes = await getIntakes(500, 0, status, search);
     const lastUpdated = await getLastUpdated();
     return NextResponse.json({ intakes, last_updated: lastUpdated });
   } catch (e) {

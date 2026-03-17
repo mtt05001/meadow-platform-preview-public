@@ -68,13 +68,20 @@ export async function getIntakes(
   limit = 500,
   offset = 0,
   statusFilter?: string,
+  search?: string,
 ): Promise<Intake[]> {
   let q = `SELECT ${SELECT_COLS} FROM intakes`;
   const params: unknown[] = [];
+  const where: string[] = [];
   if (statusFilter) {
-    q += " WHERE status = $1";
+    where.push(`status = $${params.length + 1}`);
     params.push(statusFilter);
   }
+  if (search) {
+    where.push(`name ILIKE $${params.length + 1}`);
+    params.push(`%${search}%`);
+  }
+  if (where.length) q += ` WHERE ${where.join(" AND ")}`;
   q += ` ORDER BY created_at DESC NULLS LAST LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
   params.push(limit, offset);
 

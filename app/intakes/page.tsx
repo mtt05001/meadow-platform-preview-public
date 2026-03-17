@@ -1,9 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
+
+function useDebouncedValue(value: string, ms = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(id);
+  }, [value, ms]);
+  return debounced;
+}
 import IntakeCard from "@/components/intake-card";
 import Nav from "@/components/nav";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,13 +49,18 @@ export default function IntakesPage() {
   const queryClient = useQueryClient();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["intakes"],
-    queryFn: () =>
-      apiFetch<{ intakes: Intake[]; last_updated: string | null }>(
-        "/api/intakes",
-      ),
+    queryKey: ["intakes", debouncedSearch],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      const qs = params.toString();
+      return apiFetch<{ intakes: Intake[]; last_updated: string | null }>(
+        `/api/intakes${qs ? `?${qs}` : ""}`,
+      );
+    },
   });
 
   const intakes = data?.intakes ?? [];
@@ -79,12 +93,10 @@ export default function IntakesPage() {
   });
 
   const sorted = sortByPrep1(intakes);
-  const q = search.toLowerCase().trim();
-  const matchesSearch = (i: Intake) => !q || i.name.toLowerCase().includes(q);
-  const needsReview = sorted.filter((i) => (i.status === "pending" || i.status === "sending") && matchesSearch(i));
+  const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
   // Completed always sorted by date submitted (newest first) like original
   const reviewed = sorted
-    .filter((i) => i.status !== "pending" && i.status !== "sending" && matchesSearch(i))
+    .filter((i) => i.status !== "pending" && i.status !== "sending")
     .sort(
       (a, b) =>
         new Date(b.submitted_at || "").getTime() -
