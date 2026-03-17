@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { claimIntakeForSending, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator, addNote, triggerWebhook } from "@/lib/ghl";
+import { searchContact, getOpportunityWithFacilitator, addNote } from "@/lib/ghl";
+import { sendEmail } from "@/lib/gmail";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
 
@@ -47,29 +48,22 @@ export async function POST(
       return apiError("Intake is not pending — may have already been approved", 409);
     }
 
-    // --- STEP 2: Fire GHL webhook (sends email to patient) ---
-    const webhookPayload = {
-      contact: { email: clientEmail, name: clientName },
-      custom: {
-        email_subject: "Medication Guidance for Your Upcoming Journey",
-        medication_guidance: cleanEmail,
-        risk_stratification: riskStratification,
-        approved_by: approvedBy,
-        intake_id: id,
-        facilitator_email: facilitatorEmail || "",
-        is_test: false,
-      },
-    };
-
-    const { ok, error: webhookError } = await triggerWebhook(webhookPayload);
+    // --- STEP 2: Send email to patient via Gmail API ---
+    const subject = `Meadow Medication Guidance - ${clientName}`;
+    const { ok, error: emailError } = await sendEmail(
+      clientEmail,
+      subject,
+      cleanEmail,
+      facilitatorEmail || undefined,
+    );
     if (!ok) {
-      // Revert to pending — webhook failed, no email was sent
+      // Revert to pending — email failed
       await updateIntakeFields(id, {
         status: "pending",
         approved_by: null,
         approved_at: null,
       });
-      return apiError(`GHL webhook failed: ${webhookError}`);
+      return apiError(`Email send failed: ${emailError}`);
     }
 
     // --- STEP 3: Mark as approved ---

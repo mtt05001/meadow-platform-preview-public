@@ -26,25 +26,20 @@ export async function sendEmail(
     const gmail = google.gmail({ version: "v1", auth });
 
     // Build MIME message
-    const boundary = "boundary_" + Date.now();
-    const mime = [
+    const headers = [
       `From: Meadow Medicine <care@meadowmedicine.org>`,
       `To: ${to}`,
       cc ? `Cc: ${cc}` : "",
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
-      `Content-Type: multipart/alternative; boundary="${boundary}"`,
-      "",
-      `--${boundary}`,
       `Content-Type: text/html; charset="UTF-8"`,
-      "",
-      htmlBody,
-      `--${boundary}--`,
+      `Content-Transfer-Encoding: base64`,
     ]
       .filter(Boolean)
       .join("\r\n");
 
-    const raw = Buffer.from(mime).toString("base64url");
+    const encodedBody = Buffer.from(htmlBody, "utf-8").toString("base64");
+    const raw = Buffer.from(headers + "\r\n\r\n" + encodedBody).toString("base64url");
 
     const result = await gmail.users.messages.send({
       userId: "me",
