@@ -39,6 +39,7 @@ function formatTimestamp(ts: string): string {
 export default function IntakesPage() {
   const queryClient = useQueryClient();
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [search, setSearch] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["intakes"],
@@ -78,10 +79,12 @@ export default function IntakesPage() {
   });
 
   const sorted = sortByPrep1(intakes);
-  const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
+  const q = search.toLowerCase().trim();
+  const matchesSearch = (i: Intake) => !q || i.name.toLowerCase().includes(q);
+  const needsReview = sorted.filter((i) => (i.status === "pending" || i.status === "sending") && matchesSearch(i));
   // Completed always sorted by date submitted (newest first) like original
   const reviewed = sorted
-    .filter((i) => i.status !== "pending" && i.status !== "sending")
+    .filter((i) => i.status !== "pending" && i.status !== "sending" && matchesSearch(i))
     .sort(
       (a, b) =>
         new Date(b.submitted_at || "").getTime() -
@@ -140,10 +143,25 @@ export default function IntakesPage() {
       {/* Content */}
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
         {/* Header row */}
-        <div className="mb-6">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
             Review Queue
           </h2>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setVisibleCount(PAGE_SIZE);
+            }}
+            className="
+              px-3 py-2 rounded-[6px] border border-[#e8e2d8] bg-white
+              text-[14px] text-[#2c3e50] placeholder:text-[#b8bfc6]
+              w-[260px] focus:outline-none focus:border-[#1a4d2e]
+              transition-colors
+            "
+          />
         </div>
 
         {isLoading ? (
