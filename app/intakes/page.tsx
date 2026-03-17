@@ -106,12 +106,6 @@ export default function IntakesPage() {
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
       <Nav sticky>
-        {lastUpdated && (
-          <div className="flex items-center gap-2 text-[13px] text-white/85">
-            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-            <span>Updated {formatTimestamp(lastUpdated)}</span>
-          </div>
-        )}
         <button
           onClick={() => syncGhl.mutate()}
           disabled={syncGhl.isPending}
@@ -155,10 +149,17 @@ export default function IntakesPage() {
       {/* Content */}
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
         {/* Header row */}
-        <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="mb-6 flex items-center gap-4">
           <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
             Review Queue
           </h2>
+          <div className="flex-1" />
+          {lastUpdated && (
+            <div className="flex items-center gap-2 text-[13px] text-[#7f8c8d]">
+              <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
+              <span>Updated {formatTimestamp(lastUpdated)}</span>
+            </div>
+          )}
           <input
             type="text"
             placeholder="Search by name..."
