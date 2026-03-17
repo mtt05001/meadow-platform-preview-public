@@ -143,7 +143,7 @@ export default function IntakeDetailPage() {
         method: "POST",
         body: {
           to: testEmail,
-          subject: `[TEST] Medication Guidance - ${intake?.name}`,
+          subject: `[TEST] Meadow Medication Guidance - ${intake?.name}`,
           html: emailHtml,
         },
       }),

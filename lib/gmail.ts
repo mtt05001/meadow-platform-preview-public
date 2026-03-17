@@ -28,8 +28,8 @@ export async function sendEmail(
     // Build MIME message
     const headers = [
       `From: Meadow Medicine <care@meadowmedicine.org>`,
-      `To: ${to}`,
-      cc ? `Cc: ${cc}` : "",
+      `To: ${to.trim()}`,
+      cc ? `Cc: ${cc.trim()}` : "",
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
       `Content-Type: text/html; charset="UTF-8"`,

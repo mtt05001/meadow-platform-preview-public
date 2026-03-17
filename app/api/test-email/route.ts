@@ -15,6 +15,8 @@ export async function POST(request: Request) {
       return apiError("Missing 'to' email", 400);
     }
 
+    console.log(`[test-email] to=${JSON.stringify(to)} subject=${JSON.stringify(subject)} html_length=${html?.length}`);
+
     const { ok, messageId, error } = await sendEmail(to, subject, html);
     if (!ok) {
       return apiError(error || "Failed to send email");
