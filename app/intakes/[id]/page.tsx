@@ -8,7 +8,6 @@ import dynamic from "next/dynamic";
 import { marked } from "marked";
 import type { Intake } from "@/lib/types";
 import Nav from "@/components/nav";
-import RiskTierBadge from "@/components/risk-tier-badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,36 +36,6 @@ const QuillEditor = dynamic(() => import("@/components/quill-editor"), {
     <div className="h-[460px] rounded-[6px] bg-[#f9f6f1] animate-pulse" />
   ),
 });
-
-const tierBanner: Record<
-  string,
-  { bg: string; border: string; text: string; icon: string }
-> = {
-  red: {
-    bg: "bg-[#fdeaea]",
-    border: "border-[#c0392b]",
-    text: "text-[#c0392b]",
-    icon: "🔴",
-  },
-  yellow: {
-    bg: "bg-[#fff8e1]",
-    border: "border-[#d4a017]",
-    text: "text-[#856404]",
-    icon: "🟡",
-  },
-  green: {
-    bg: "bg-[#eafaf1]",
-    border: "border-[#27ae60]",
-    text: "text-[#27ae60]",
-    icon: "🟢",
-  },
-  unknown: {
-    bg: "bg-[#f0ede8]",
-    border: "border-[#d5cfc5]",
-    text: "text-[#7f8c8d]",
-    icon: "⚪",
-  },
-};
 
 /** Convert markdown or raw text to HTML; pass through if already HTML */
 function toHtml(text: string): string {
@@ -108,8 +77,6 @@ export default function IntakeDetailPage() {
 
   const isApproved =
     intake?.status === "approved" || intake?.status === "rejected" || intake?.status === "sending";
-
-  const aiEmpty = !riskHtml && !emailHtml;
 
   const saveRiskStrat = useMutation({
     mutationFn: () =>
@@ -243,7 +210,6 @@ export default function IntakeDetailPage() {
 
   if (!intake) return null;
 
-  const tier = tierBanner[intake.risk_tier] || tierBanner.unknown;
   const client = intake.client_data || {};
   const clientName = (client.name as string) || intake.name || "Unknown";
   const clientAge = client.age ? `${client.age}yo` : "";
@@ -302,24 +268,6 @@ export default function IntakeDetailPage() {
           )}
         </div>
 
-        {/* Tier banner */}
-        <div
-          className={`
-            ${tier.bg} ${tier.text} border-2 ${tier.border}
-            rounded-[10px] px-6 py-4 mb-5
-            flex items-center gap-3 text-[16px] font-semibold
-          `}
-        >
-          <span className="text-[28px]">{tier.icon}</span>
-          <span>
-            {intake.risk_tier_explanation ||
-              `Risk tier: ${intake.risk_tier}`}
-          </span>
-          <span className="ml-auto">
-            <RiskTierBadge tier={intake.risk_tier} size="lg" />
-          </span>
-        </div>
-
         {/* Hard contraindications */}
         {intake.hard_contraindications.length > 0 && (
           <div className="bg-[#fdeaea] border-2 border-[#c0392b] rounded-lg px-4 py-4 mb-5">
@@ -337,28 +285,23 @@ export default function IntakeDetailPage() {
           </div>
         )}
 
-        {/* Empty AI output banner */}
-        {aiEmpty && !isApproved && (
-          <div className="bg-[#fff8e1] border-2 border-[#d4a017] rounded-[10px] px-6 py-4 mb-5 flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-semibold text-[#856404] mb-0.5">
-                AI output not available for this intake
-              </h3>
-              <p className="text-[13px] text-[#856404]/80">
-                The risk stratification and medication guidance were not generated. You can regenerate them now.
-              </p>
-            </div>
-            <Button
+        {/* Regenerate AI link + Two-column editor grid */}
+        {!isApproved && (
+          <div className="flex justify-end mb-2">
+            <button
               onClick={() => setRegenerateOpen(true)}
               disabled={regenerateAi.isPending}
-              className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a] shrink-0 ml-4"
+              className="
+                text-[13px] text-[#7f8c8d] hover:text-[#1a4d2e]
+                transition-colors cursor-pointer
+                bg-transparent border-none
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
             >
-              {regenerateAi.isPending ? "Generating..." : "Regenerate AI"}
-            </Button>
+              {regenerateAi.isPending ? "Generating..." : "↻ Regenerate AI"}
+            </button>
           </div>
         )}
-
-        {/* Two-column editor grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
           {/* Risk Stratification */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
