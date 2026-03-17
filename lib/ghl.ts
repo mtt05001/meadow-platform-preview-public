@@ -99,7 +99,7 @@ export async function searchContact(
   try {
     const data = (await ghlFetch("/contacts/search", {
       method: "POST",
-      body: JSON.stringify({ locationId: LOCATION_ID, query: email, limit: 1 }),
+      body: JSON.stringify({ locationId: LOCATION_ID, query: email, pageLimit: 1 }),
     })) as { contacts?: GHLContact[] };
     const contacts = data.contacts || [];
     return contacts.length
@@ -118,14 +118,14 @@ export async function getOpportunityWithFacilitator(
   error: string | null;
 }> {
   try {
-    const data = (await ghlFetch("/opportunities/search", {
-      method: "POST",
-      body: JSON.stringify({
-        locationId: LOCATION_ID,
-        contactId,
-        limit: 1,
-      }),
-    })) as { opportunities?: Record<string, unknown>[] };
+    const params = new URLSearchParams({
+      location_id: LOCATION_ID,
+      contact_id: contactId,
+      limit: "1",
+    });
+    const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
+      opportunities?: Record<string, unknown>[];
+    };
 
     const opps = data.opportunities || [];
     if (!opps.length)
@@ -170,10 +170,14 @@ export async function updateOpportunityField(
 ): Promise<{ ok: boolean; error: string | null }> {
   try {
     // Find opportunity
-    const data = (await ghlFetch("/opportunities/search", {
-      method: "POST",
-      body: JSON.stringify({ locationId: LOCATION_ID, contactId, limit: 5 }),
-    })) as { opportunities?: { id: string }[] };
+    const params = new URLSearchParams({
+      location_id: LOCATION_ID,
+      contact_id: contactId,
+      limit: "5",
+    });
+    const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
+      opportunities?: { id: string }[];
+    };
 
     const opps = data.opportunities || [];
     if (!opps.length) return { ok: false, error: "No opportunities found" };
@@ -206,18 +210,19 @@ export async function updateOpportunityField(
 export async function searchPipelineOpportunities(
   pipelineId: string,
 ): Promise<{ id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string }[]> {
-  const allOpps: { id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string }[] = [];
+  type Opp = { id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string };
+  const allOpps: Opp[] = [];
   let page = 1;
   while (true) {
-    const data = (await ghlFetch("/opportunities/search", {
-      method: "POST",
-      body: JSON.stringify({
-        locationId: LOCATION_ID,
-        pipelineId,
-        limit: 100,
-        page,
-      }),
-    })) as { opportunities?: { id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string }[] };
+    const params = new URLSearchParams({
+      location_id: LOCATION_ID,
+      pipeline_id: pipelineId,
+      limit: "100",
+      page: String(page),
+    });
+    const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
+      opportunities?: Opp[];
+    };
     const opps = data.opportunities || [];
     if (!opps.length) break;
     allOpps.push(...opps);
