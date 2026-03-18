@@ -138,6 +138,7 @@ export default function IntakeDetailPage() {
     onSuccess: () => {
       toast.success("Approved and email sent!");
       setApproveOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["intakes"] });
       router.push("/intakes");
     },
     onError: (e) => toast.error("Approval failed: " + e.message),
