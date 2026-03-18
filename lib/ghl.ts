@@ -163,34 +163,17 @@ export async function addNote(
   }
 }
 
-export async function updateOpportunityField(
-  contactId: string,
-  hiStatus?: string,
-  intakeId?: string,
+export async function updateOpportunity(
+  oppId: string,
+  fields: { hiStatus?: string; hiUrl?: string },
 ): Promise<{ ok: boolean; error: string | null }> {
   try {
-    // Find opportunity
-    const params = new URLSearchParams({
-      location_id: LOCATION_ID,
-      contact_id: contactId,
-      limit: "5",
-    });
-    const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
-      opportunities?: { id: string }[];
-    };
-
-    const opps = data.opportunities || [];
-    if (!opps.length) return { ok: false, error: "No opportunities found" };
-
-    const oppId = opps[0].id;
-
     const customFields: { id: string; value?: string; field_value?: string }[] = [];
-    if (hiStatus) {
-      customFields.push({ id: GHL_FIELDS.HI_STATUS, value: hiStatus });
+    if (fields.hiStatus) {
+      customFields.push({ id: GHL_FIELDS.HI_STATUS, value: fields.hiStatus });
     }
-    if (intakeId) {
-      const hiUrl = `${getAppUrl()}/intakes/${intakeId}/readonly`;
-      customFields.push({ id: GHL_FIELDS.HI_URL, field_value: hiUrl });
+    if (fields.hiUrl) {
+      customFields.push({ id: GHL_FIELDS.HI_URL, field_value: fields.hiUrl });
     }
 
     if (!customFields.length) return { ok: true, error: null };

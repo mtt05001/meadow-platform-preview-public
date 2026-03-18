@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { claimIntakeForSending, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator, addNote } from "@/lib/ghl";
+import { searchContact, getOpportunityWithFacilitator, addNote, updateOpportunity, getAppUrl } from "@/lib/ghl";
 import { sendEmail } from "@/lib/gmail";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
@@ -34,12 +34,22 @@ export async function POST(
       cleanEmail = "<p>" + cleanEmail.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
     }
 
-    // Lookup contact and facilitator
+    // Lookup contact, opportunity, and facilitator
     let facilitatorEmail: string | null = null;
-    const { contact } = await searchContact(clientEmail);
+    let oppId: string | null = null;
+    const { contact, error: contactErr } = await searchContact(clientEmail);
     if (contact) {
-      const { facilitatorEmail: fac } = await getOpportunityWithFacilitator(contact.id);
+      console.log(`[APPROVE] GHL contact found: ${contact.id} for ${clientEmail}`);
+      const { opportunity, facilitatorEmail: fac, error: oppErr } = await getOpportunityWithFacilitator(contact.id);
       facilitatorEmail = fac;
+      oppId = (opportunity?.id as string) || null;
+      if (oppId) {
+        console.log(`[APPROVE] GHL opportunity found: ${oppId}`);
+      } else {
+        console.warn(`[APPROVE] No GHL opportunity for contact ${contact.id}: ${oppErr}`);
+      }
+    } else {
+      console.warn(`[APPROVE] GHL contact not found for ${clientEmail}: ${contactErr}`);
     }
 
     // --- STEP 1: Atomically claim intake as "sending" (prevents double-approve) ---
@@ -81,10 +91,22 @@ export async function POST(
       });
     }
 
-    // Add approval note to GHL contact (fire-and-forget)
+    // Update GHL (fire-and-forget)
     if (contact) {
       const noteBody = `[HI_APPROVAL] approved_by=${approvedBy} | approved_at=${approvedAt} | intake_id=${id}`;
-      addNote(contact.id, noteBody).catch(() => {});
+      addNote(contact.id, noteBody).catch((e) => console.error(`[APPROVE] GHL addNote failed:`, e));
+    }
+    if (oppId) {
+      const hiUrl = `${getAppUrl()}/intakes/${id}/readonly`;
+      console.log(`[APPROVE] Setting HI_URL on opportunity ${oppId}: ${hiUrl}`);
+      updateOpportunity(oppId, { hiUrl }).then(
+        (r) => r.ok
+          ? console.log(`[APPROVE] HI_URL updated successfully`)
+          : console.error(`[APPROVE] HI_URL update failed: ${r.error}`),
+        (e) => console.error(`[APPROVE] HI_URL update threw:`, e),
+      );
+    } else {
+      console.warn(`[APPROVE] Skipping HI_URL update — no opportunity found`);
     }
 
     return NextResponse.json({
