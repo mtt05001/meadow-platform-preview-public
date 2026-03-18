@@ -29,8 +29,9 @@ export default function QuillEditor({
 
   // Track whether we're programmatically setting content
   const isSettingRef = useRef(false);
-  // Store initial value for use after async import
+  // Store latest value for use after async import
   const initialValueRef = useRef(value);
+  initialValueRef.current = value;
 
   // Initialize Quill once, with cleanup for Strict Mode
   useEffect(() => {

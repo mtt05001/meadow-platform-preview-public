@@ -84,7 +84,10 @@ export default function IntakeDetailPage() {
         method: "POST",
         body: { risk_stratification: riskHtml },
       }),
-    onSuccess: () => toast.success("Risk stratification saved"),
+    onSuccess: () => {
+      toast.success("Risk stratification saved");
+      queryClient.invalidateQueries({ queryKey: ["intake", id] });
+    },
     onError: (e) => toast.error("Save failed: " + e.message),
   });
 
@@ -94,7 +97,10 @@ export default function IntakeDetailPage() {
         method: "POST",
         body: { email: emailHtml },
       }),
-    onSuccess: () => toast.success("Email draft saved"),
+    onSuccess: () => {
+      toast.success("Email draft saved");
+      queryClient.invalidateQueries({ queryKey: ["intake", id] });
+    },
     onError: (e) => toast.error("Save failed: " + e.message),
   });
 
@@ -306,64 +312,58 @@ export default function IntakeDetailPage() {
           {/* Risk Stratification */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
             <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold">
-              📋 Risk Stratification {!isApproved && "(Editable)"}
+              📋 Risk Stratification
             </div>
             <div className="p-5">
               <div className="border border-[#e8e2d8] rounded-[6px] bg-white overflow-hidden">
                 <QuillEditor
                   value={riskHtml}
                   onChange={setRiskHtml}
-                  disabled={isApproved}
                   placeholder="Risk stratification notes..."
                 />
               </div>
-              {!isApproved && (
-                <div className="flex items-center gap-2.5 mt-2">
-                  <button
-                    onClick={() => saveRiskStrat.mutate()}
-                    disabled={saveRiskStrat.isPending}
-                    className="
-                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                      bg-[#1a4d2e] text-white
-                      hover:opacity-85 transition-opacity
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                    "
-                  >
-                    {saveRiskStrat.isPending ? "Saving..." : "💾 Save Changes"}
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5 mt-2">
+                <button
+                  onClick={() => saveRiskStrat.mutate()}
+                  disabled={saveRiskStrat.isPending}
+                  className="
+                    px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                    bg-[#1a4d2e] text-white
+                    hover:opacity-85 transition-opacity
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  "
+                >
+                  {saveRiskStrat.isPending ? "Saving..." : "💾 Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Email Editor */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
             <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold">
-              📧 Medication Guidance Email {!isApproved && "(Editable)"}
+              📧 Medication Guidance Email
             </div>
             <div className="p-5">
               <div className="border border-[#e8e2d8] rounded-[6px] bg-white overflow-hidden">
                 <QuillEditor
                   value={emailHtml}
                   onChange={setEmailHtml}
-                  disabled={isApproved}
                   placeholder="Medication guidance email..."
                 />
               </div>
-              {!isApproved && (
-                <div className="flex items-center gap-2.5 mt-2">
-                  <button
-                    onClick={() => saveEmailDraft.mutate()}
-                    disabled={saveEmailDraft.isPending}
-                    className="
-                      px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                      bg-[#1a4d2e] text-white
-                      hover:opacity-85 transition-opacity
-                      disabled:opacity-50 disabled:cursor-not-allowed
-                    "
-                  >
-                    {saveEmailDraft.isPending ? "Saving..." : "💾 Save Changes"}
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2.5 mt-2">
+                <button
+                  onClick={() => saveEmailDraft.mutate()}
+                  disabled={saveEmailDraft.isPending}
+                  className="
+                    px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                    bg-[#1a4d2e] text-white
+                    hover:opacity-85 transition-opacity
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                  "
+                >
+                  {saveEmailDraft.isPending ? "Saving..." : "💾 Save Changes"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
