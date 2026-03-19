@@ -38,8 +38,8 @@ export default function IntakeReadonlyPage() {
   const [pdfOpen, setPdfOpen] = useState(false);
 
   const { data: intake, isLoading, error } = useQuery({
-    queryKey: ["intake", id],
-    queryFn: () => apiFetch<Intake>(`/api/intakes/${id}`),
+    queryKey: ["intake-readonly", id],
+    queryFn: () => apiFetch<Intake>(`/api/intakes/${id}/readonly`),
   });
 
   if (isLoading) {

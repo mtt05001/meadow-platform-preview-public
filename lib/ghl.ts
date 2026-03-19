@@ -3,7 +3,9 @@ const GHL_VERSION = "2021-07-28";
 const LOCATION_ID = process.env.GHL_LOCATION_ID || "A4AjOJ6RQgzEHxtmZsOr";
 
 export function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || "https://meadow-platform.vercel.app";
+  const url = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (!url) throw new Error("NEXT_PUBLIC_APP_URL or VERCEL_PROJECT_PRODUCTION_URL must be set");
+  return url.startsWith("http") ? url : `https://${url}`;
 }
 
 // GHL custom field IDs (opportunity-level)
