@@ -7,6 +7,8 @@ function getCredentials() {
   return JSON.parse(json);
 }
 
+const ALWAYS_CC = ["tracy@meadowmedicine.org"];
+
 export async function sendEmail(
   to: string,
   subject: string,
@@ -25,11 +27,16 @@ export async function sendEmail(
 
     const gmail = google.gmail({ version: "v1", auth });
 
+    // Build CC list: always include Tracy + facilitator if present
+    const ccList = [...ALWAYS_CC];
+    if (cc) ccList.push(cc.trim());
+    const uniqueCc = [...new Set(ccList.map((e) => e.toLowerCase()))];
+
     // Build MIME message
     const headers = [
       `From: Meadow Medicine <care@meadowmedicine.org>`,
       `To: ${to.trim()}`,
-      cc ? `Cc: ${cc.trim()}` : "",
+      uniqueCc.length ? `Cc: ${uniqueCc.join(", ")}` : "",
       `Subject: ${subject}`,
       `MIME-Version: 1.0`,
       `Content-Type: text/html; charset="UTF-8"`,

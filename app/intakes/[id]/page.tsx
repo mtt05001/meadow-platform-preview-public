@@ -144,6 +144,15 @@ export default function IntakeDetailPage() {
     onError: (e) => toast.error("Approval failed: " + e.message),
   });
 
+  const resendMutation = useMutation({
+    mutationFn: () =>
+      apiFetch<{ success: boolean }>(`/api/intakes/${id}/resend-email`, {
+        method: "POST",
+      }),
+    onSuccess: () => toast.success("Email resent successfully"),
+    onError: (e) => toast.error("Resend failed: " + e.message),
+  });
+
   const testEmailMutation = useMutation({
     mutationFn: () =>
       apiFetch<{ success: boolean }>("/api/test-email", {
@@ -397,21 +406,35 @@ export default function IntakeDetailPage() {
                 </>
               )}
             </span>
-            <button
-              onClick={() =>
-                window.open(
-                  `/intakes/${intake.id}/readonly`,
-                  "_blank",
-                )
-              }
-              className="
-                bg-white border border-[#e8e2d8] text-[#444]
-                px-4 py-2 rounded-[6px] text-[13px] font-medium
-                cursor-pointer hover:bg-[#f5f1eb] transition-colors
-              "
-            >
-              👁 View Only
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => resendMutation.mutate()}
+                disabled={resendMutation.isPending}
+                className="
+                  bg-white border border-[#e8e2d8] text-[#444]
+                  px-4 py-2 rounded-[6px] text-[13px] font-medium
+                  cursor-pointer hover:bg-[#f5f1eb] transition-colors
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
+              >
+                {resendMutation.isPending ? "Sending…" : "Resend Email"}
+              </button>
+              <button
+                onClick={() =>
+                  window.open(
+                    `/intakes/${intake.id}/readonly`,
+                    "_blank",
+                  )
+                }
+                className="
+                  bg-white border border-[#e8e2d8] text-[#444]
+                  px-4 py-2 rounded-[6px] text-[13px] font-medium
+                  cursor-pointer hover:bg-[#f5f1eb] transition-colors
+                "
+              >
+                👁 View Only
+              </button>
+            </div>
           </div>
         ) : (
           /* Pending — show feedback + actions */
