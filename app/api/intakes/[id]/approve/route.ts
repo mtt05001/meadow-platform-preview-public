@@ -60,13 +60,15 @@ export async function POST(
 
     // --- STEP 2: Send email to patient via Gmail API ---
     const subject = `Meadow Medication Guidance - ${clientName}`;
-    const { ok, error: emailError } = await sendEmail(
+    console.log(`[APPROVE] Sending email to ${clientEmail}${facilitatorEmail ? ` (cc: ${facilitatorEmail})` : ""}`);
+    const { ok, messageId, error: emailError } = await sendEmail(
       clientEmail,
       subject,
       cleanEmail,
       facilitatorEmail || undefined,
     );
     if (!ok) {
+      console.error(`[APPROVE] Gmail send failed for ${clientEmail}: ${emailError}`);
       // Revert to pending — email failed
       await updateIntakeFields(id, {
         status: "pending",
@@ -75,6 +77,7 @@ export async function POST(
       });
       return apiError(`Email send failed: ${emailError}`);
     }
+    console.log(`[APPROVE] Gmail send succeeded — messageId: ${messageId}`);
 
     // --- STEP 3: Mark as approved ---
     try {
