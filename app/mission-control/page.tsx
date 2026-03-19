@@ -156,6 +156,9 @@ export default function MissionControlPage() {
   });
 
   const facLoad = data ? computeFacilitatorLoad(data) : [];
+  const filteredAlerts = data
+    ? data.alerts.filter((a) => !/\btest\b/i.test(a.name))
+    : [];
 
   return (
     <>
@@ -235,7 +238,9 @@ export default function MissionControlPage() {
               )}
               {data.days.map((day) => {
                 const visible = day.events.filter(
-                  (e) => !["Other", "Consult", "Discovery"].includes(e.type),
+                  (e) =>
+                    !["Other", "Consult", "Discovery"].includes(e.type) &&
+                    !/\btest\b/i.test(e.name),
                 );
                 return (
                   <div
@@ -268,16 +273,16 @@ export default function MissionControlPage() {
                 <div className="bg-tier-red-bg px-5 py-3 font-bold text-sm border-b border-border flex items-center gap-2">
                   <span className="text-tier-red">Integrity Alerts</span>
                   <span className="text-sm text-bark-light font-medium">
-                    ({data.alerts.length})
+                    ({filteredAlerts.length})
                   </span>
                 </div>
-                {data.alerts.length === 0 ? (
+                {filteredAlerts.length === 0 ? (
                   <div className="px-5 py-3 text-sm text-tier-green">
                     All clear — no issues detected
                   </div>
                 ) : (
                   <div className="max-h-64 overflow-y-auto">
-                    {data.alerts.map((a, i) => (
+                    {filteredAlerts.map((a, i) => (
                       <div
                         key={`${a.name}-${i}`}
                         className="px-5 py-3 border-b border-border/50 last:border-b-0"
