@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { fetchSubmissionPdf } from "@/lib/jotform";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
-import { auth } from "@clerk/nextjs/server";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  await auth.protect();
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);
