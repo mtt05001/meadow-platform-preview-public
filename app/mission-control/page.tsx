@@ -38,6 +38,13 @@ const STATUS_DOT: Record<string, string> = {
   pipeline: "bg-gray-400",
 };
 
+const STATUS_LABEL: Record<string, { text: string; color: string }> = {
+  green: { text: "Ready", color: "text-tier-green" },
+  yellow: { text: "In Progress", color: "text-tier-yellow" },
+  red: { text: "Missing", color: "text-tier-red" },
+  pipeline: { text: "Pipeline", color: "text-gray-400" },
+};
+
 function formatTimestamp(iso: string): string {
   try {
     return (
@@ -73,7 +80,7 @@ function computeFacilitatorLoad(data: McData): [string, number][] {
 function EventRow({ ev }: { ev: McEvent }) {
   const showReadiness = !["Consult", "Other", "Paid"].includes(ev.type);
   return (
-    <div className="grid grid-cols-[90px_1fr_auto] items-center px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
+    <div className="grid grid-cols-[90px_1fr_110px] items-center px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
       <div className="text-sm font-semibold text-bark tabular-nums">
         {ev.time}
       </div>
@@ -107,7 +114,10 @@ function EventRow({ ev }: { ev: McEvent }) {
           </div>
         )}
       </div>
-      <div className="flex items-center pl-3">
+      <div className="flex items-center justify-end gap-2">
+        <span className={`text-xs font-semibold whitespace-nowrap ${(STATUS_LABEL[ev.status] || STATUS_LABEL.pipeline).color}`}>
+          {(STATUS_LABEL[ev.status] || STATUS_LABEL.pipeline).text}
+        </span>
         <div
           className={`w-3 h-3 rounded-full shrink-0 ${STATUS_DOT[ev.status] || STATUS_DOT.pipeline}`}
         />
@@ -303,32 +313,6 @@ export default function MissionControlPage() {
                 </div>
               </div>
 
-              {/* Legend */}
-              <div className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="bg-cream-dark/40 px-5 py-3 border-b border-border">
-                  <h3 className="text-xs font-bold text-bark uppercase tracking-wider">
-                    Status Legend
-                  </h3>
-                </div>
-                <div className="flex flex-col gap-2 text-sm px-5 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full ${STATUS_DOT.green}`} />
-                    <span>Ready — HI + OHA complete</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full ${STATUS_DOT.yellow}`} />
-                    <span>In Progress — paperwork underway</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full ${STATUS_DOT.red}`} />
-                    <span>Missing — paperwork not started</span>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-3 h-3 rounded-full ${STATUS_DOT.pipeline}`} />
-                    <span>Pipeline — consult stage</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
