@@ -36,6 +36,7 @@ export default function IntakeReadonlyPage() {
   const params = useParams();
   const id = params.id as string;
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(true);
 
   const { data: intake, isLoading, error } = useQuery({
     queryKey: ["intake-readonly", id],
@@ -116,7 +117,7 @@ export default function IntakeReadonlyPage() {
             {/* View Original Intake button */}
             {jfId && (
               <a
-                onClick={() => setPdfOpen(true)}
+                onClick={() => { setPdfLoading(true); setPdfOpen(true); }}
                 className="
                   inline-block bg-white border border-[#e8e2d8] text-[#1a4d2e]
                   px-3.5 py-2 rounded-[6px] text-[13px] font-medium
@@ -202,10 +203,18 @@ export default function IntakeReadonlyPage() {
                 ✕
               </button>
             </div>
-            <iframe
-              src={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
-              className="flex-1 border-none w-full"
-            />
+            <div className="flex-1 relative">
+              {pdfLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1a4d2e] border-t-transparent" />
+                </div>
+              )}
+              <iframe
+                src={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
+                className="h-full border-none w-full"
+                onLoad={() => setPdfLoading(false)}
+              />
+            </div>
           </div>
         </div>
       )}

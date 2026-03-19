@@ -56,6 +56,7 @@ export default function IntakeDetailPage() {
   const [approverName, setApproverName] = useState("");
   const [testEmail, setTestEmail] = useState("");
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(true);
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
@@ -267,7 +268,7 @@ export default function IntakeDetailPage() {
           {jfId && (
             <>
               <button
-                onClick={() => setPdfOpen(true)}
+                onClick={() => { setPdfLoading(true); setPdfOpen(true); }}
                 className="text-[14px] font-normal text-[#2d7a4a] underline ml-3 hover:text-[#1a4d2e] bg-transparent border-none"
               >
                 📄 View Original Intake
@@ -642,10 +643,18 @@ export default function IntakeDetailPage() {
                 ✕
               </button>
             </div>
-            <iframe
-              src={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
-              className="flex-1 border-none w-full"
-            />
+            <div className="flex-1 relative">
+              {pdfLoading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1a4d2e] border-t-transparent" />
+                </div>
+              )}
+              <iframe
+                src={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
+                className="h-full border-none w-full"
+                onLoad={() => setPdfLoading(false)}
+              />
+            </div>
           </div>
         </div>
       )}
