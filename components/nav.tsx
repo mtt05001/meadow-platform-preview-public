@@ -7,6 +7,7 @@ import { UserButton } from "@clerk/nextjs";
 const navLinks = [
   { href: "/intakes", label: "Intakes" },
   { href: "/clients", label: "Clients" },
+  { href: "/mission-control", label: "Mission Control" },
 ];
 
 export default function Nav({
