@@ -50,10 +50,8 @@ export async function POST() {
             value?: string;
           }[]);
 
-          const prep1Raw = cfVal(cfs, GHL_FIELDS.PREP1_DATE);
-          const prep1 = fmtDate(prep1Raw);
+          const prep1 = fmtDate(cfVal(cfs, GHL_FIELDS.PREP1_DATE));
           const facilitator = cfVal(cfs, GHL_FIELDS.LEAD_FACILITATOR) || null;
-          if (prep1Raw) console.log(`[sync-ghl] ${intake.name}: prep1 raw="${prep1Raw}" → "${prep1}"`);
 
           const fields: Record<string, string | null> = {};
           if (prep1) fields.prep1_date = prep1;

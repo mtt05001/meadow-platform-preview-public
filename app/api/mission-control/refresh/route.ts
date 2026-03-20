@@ -11,6 +11,7 @@ const HI_OPP = "JD7nHdPbcHWnEh2OEhhI";
 const OHA_OPP = "onZ8dloJ0Ho6JQpCt8PI";
 const FAC_OPP = "H4LM6jbUwR1woLSj2kzV";
 const OPP_FIELD = "V3QWXD7XKmXoKd9j7HnE";
+const JOURNEY_PIPELINE = "b1raXFqNeALdRrsQwPD5";
 const PREP1 = "47Nj5tCxZy6Zhze9m9c8";
 const PREP2 = "RHZA1YmoHFAJlAbYrLvw";
 const INTEG1 = "DkOFs5E0bvSEw9NkAYyv";
@@ -98,7 +99,7 @@ export async function GET() {
   if (!token) return apiError("GHL_ACCESS_TOKEN env var not set");
 
   try {
-    // 5-day window in PT
+    // 7-day window in PT
     const ptMidnight = new Date(
       new Date().toLocaleString("en-US", { timeZone: PT_TZ }),
     );
@@ -109,7 +110,7 @@ export async function GET() {
         new Date().toLocaleString("en-US", { timeZone: PT_TZ }),
       ).getTime();
     const startUtcMs = ptMidnight.getTime() + offsetMs;
-    const endUtcMs = startUtcMs + 5 * 24 * 60 * 60 * 1000;
+    const endUtcMs = startUtcMs + 7 * 24 * 60 * 60 * 1000;
 
     // Calendars
     const { calendars = [] } = await ghlFetch(
@@ -121,7 +122,7 @@ export async function GET() {
     for (const c of calendars) {
       const name = (c.name || "").toLowerCase();
       if (c.groupId === GEN_GROUP) {
-        calMap[c.id] = { type: "Paid" };
+        calMap[c.id] = { type: "Taper" };
         continue;
       }
       if (SKIP_KW.some((k) => name.includes(k))) continue;
@@ -166,10 +167,14 @@ export async function GET() {
       }),
     );
 
-    // Enrich contacts (cached)
-    const cache: Record<string, ContactInfo> = {};
-    async function enrich(cid: string): Promise<ContactInfo> {
-      if (cache[cid]) return cache[cid];
+    // Enrich contacts (cached — store promises to prevent duplicate concurrent calls)
+    const cache: Record<string, Promise<ContactInfo>> = {};
+    function enrich(cid: string): Promise<ContactInfo> {
+      if (cid in cache) return cache[cid];
+      cache[cid] = _enrich(cid);
+      return cache[cid];
+    }
+    async function _enrich(cid: string): Promise<ContactInfo> {
       try {
         const { contact: c } = await ghlFetch(
           `/contacts/${cid}`,
@@ -196,47 +201,34 @@ export async function GET() {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let opp: any = null;
-        const oppId = ccf[OPP_FIELD];
-        if (oppId) {
-          try {
-            const r = await ghlFetch(
-              `/opportunities/${oppId}`,
+        try {
+          const r = await ghlFetch(
+            "/opportunities/search",
+            { location_id: LOCATION, contact_id: cid, limit: "5" },
+            token!,
+            "2021-07-28",
+          );
+          const opps = r.opportunities || [];
+          // Find the opportunity in the journey pipeline
+          const match = opps.find((o: { pipelineId?: string }) => o.pipelineId === JOURNEY_PIPELINE) || opps[0];
+          if (match) {
+            const r2 = await ghlFetch(
+              `/opportunities/${match.id}`,
               null,
               token!,
               "2021-07-28",
             );
-            opp = r.opportunity;
-          } catch {
-            // ignore
+            opp = r2.opportunity;
           }
-        }
-        if (!opp) {
-          try {
-            const r = await ghlFetch(
-              "/opportunities/search",
-              { location_id: LOCATION, q: name, limit: "1" },
-              token!,
-              "2021-07-28",
-            );
-            if (r.opportunities?.[0]) {
-              const r2 = await ghlFetch(
-                `/opportunities/${r.opportunities[0].id}`,
-                null,
-                token!,
-                "2021-07-28",
-              );
-              opp = r2.opportunity;
-            }
-          } catch {
-            // ignore
-          }
+        } catch {
+          // ignore
         }
         if (opp) {
           const ocf: Record<string, string> = Object.fromEntries(
             (opp.customFields || []).map(
-              (f: { id: string; fieldValue?: string }) => [
+              (f: { id: string; fieldValue?: string; fieldValueString?: string; value?: string }) => [
                 f.id,
-                f.fieldValue || "",
+                f.fieldValue || f.fieldValueString || f.value || "",
               ],
             ),
           );
@@ -250,11 +242,10 @@ export async function GET() {
           integ1 = ocf[INTEG1] || "";
           integ2 = ocf[INTEG2] || "";
         }
-        cache[cid] = { name, hi, oha, fac, prep1, prep2, journey, integ1, integ2 };
+        return { name, hi, oha, fac, prep1, prep2, journey, integ1, integ2 };
       } catch {
-        cache[cid] = { ...DEFAULT_INFO };
+        return { ...DEFAULT_INFO };
       }
-      return cache[cid];
     }
 
     // Build days map
@@ -302,8 +293,12 @@ export async function GET() {
 
         const hiOk = ["Signed", "Reviewed"].includes(info.hi);
         const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
+        const isPrep1 = etype === "Prep" && !isPrep2;
         let status: "green" | "yellow" | "red";
-        if (hiOk && ohaOk) {
+        if (isPrep1) {
+          // Prep 1 only requires HI reviewed — OHA is due before Prep 2
+          status = hiOk ? "green" : "yellow";
+        } else if (hiOk && ohaOk) {
           status = "green";
         } else if (
           ["Journey", "Room", "In-Person Prep", "In-Person Integration"].includes(
@@ -312,7 +307,7 @@ export async function GET() {
           (etype === "Prep" && isPrep2)
         ) {
           status = ohaOk ? "yellow" : "red";
-        } else if (etype === "Paid") {
+        } else if (etype === "Taper") {
           status = "green";
         } else {
           status = "yellow";

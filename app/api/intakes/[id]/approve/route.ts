@@ -38,17 +38,9 @@ export async function POST(
     let oppId: string | null = null;
     const { contact, error: contactErr } = await searchContact(clientEmail);
     if (contact) {
-      console.log(`[APPROVE] GHL contact found: ${contact.id} for ${clientEmail}`);
-      const { opportunity, facilitatorEmail: fac, error: oppErr } = await getOpportunityWithFacilitator(contact.id);
+      const { opportunity, facilitatorEmail: fac } = await getOpportunityWithFacilitator(contact.id);
       facilitatorEmail = fac;
       oppId = (opportunity?.id as string) || null;
-      if (oppId) {
-        console.log(`[APPROVE] GHL opportunity found: ${oppId}`);
-      } else {
-        console.warn(`[APPROVE] No GHL opportunity for contact ${contact.id}: ${oppErr}`);
-      }
-    } else {
-      console.warn(`[APPROVE] GHL contact not found for ${clientEmail}: ${contactErr}`);
     }
 
     // --- STEP 1: Atomically claim intake as "sending" (prevents double-approve) ---
@@ -71,10 +63,10 @@ export async function POST(
       },
     };
 
-    console.log(`[APPROVE] Triggering GHL webhook for ${clientEmail}`);
+    console.log(`[APPROVE] Triggering GHL webhook for intake ${id}`);
     const { ok, error: webhookError } = await triggerWebhook(webhookPayload);
     if (!ok) {
-      console.error(`[APPROVE] GHL webhook failed for ${clientEmail}: ${webhookError}`);
+      console.error(`[APPROVE] GHL webhook failed for intake ${id}: ${webhookError}`);
       // Revert to pending — webhook failed, no email was sent
       await updateIntakeFields(id, {
         status: "pending",

@@ -26,7 +26,7 @@ function badgeClass(type: string): string {
     return "bg-blue-100 text-blue-700";
   if (t.includes("prep")) return "bg-tier-green-bg text-green-800";
   if (t.includes("integration")) return "bg-pink-100 text-pink-700";
-  if (t.includes("paid")) return "bg-blue-50 text-blue-500";
+  if (t.includes("taper")) return "bg-blue-50 text-blue-500";
   if (t.includes("consult")) return "bg-gray-100 text-gray-500";
   return "bg-gray-100 text-gray-500";
 }
@@ -78,7 +78,7 @@ function computeFacilitatorLoad(data: McData): [string, number][] {
 }
 
 function EventRow({ ev }: { ev: McEvent }) {
-  const showReadiness = !["Consult", "Other", "Paid"].includes(ev.type);
+  const showReadiness = !["Consult", "Other", "Taper"].includes(ev.type);
   return (
     <div className="grid grid-cols-[90px_1fr_110px] items-center px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
       <div className="text-sm font-semibold text-bark tabular-nums">
@@ -229,11 +229,11 @@ export default function MissionControlPage() {
             {/* Forecast */}
             <div className="flex flex-col gap-4">
               <h2 className="text-base font-bold text-bark uppercase tracking-wider pb-2 border-b border-border">
-                Client Five-Day Forecast
+                Client Seven-Day Forecast
               </h2>
               {data.days.length === 0 && (
                 <p className="text-bark-light text-sm py-8 text-center">
-                  No events in the next 5 days.
+                  No events in the next 7 days.
                 </p>
               )}
               {data.days.map((day) => {
@@ -299,7 +299,7 @@ export default function MissionControlPage() {
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="bg-cream-dark/40 px-5 py-3 border-b border-border">
                   <h3 className="text-xs font-bold text-bark uppercase tracking-wider">
-                    Facilitator Load (5-Day)
+                    Facilitator Load (7-Day)
                   </h3>
                 </div>
                 <div className="px-5 py-3">

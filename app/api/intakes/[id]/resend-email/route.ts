@@ -30,7 +30,7 @@ export async function POST(
     }
 
     const subject = `Meadow Medication Guidance - ${intake.name}`;
-    console.log(`[RESEND] Sending email to ${intake.email}${facilitatorEmail ? ` (cc: ${facilitatorEmail})` : ""}`);
+    console.log(`[RESEND] Sending email for intake ${id}`);
     const { ok, messageId, error: emailError } = await sendEmail(
       intake.email,
       subject,
@@ -39,11 +39,11 @@ export async function POST(
     );
 
     if (!ok) {
-      console.error(`[RESEND] Gmail send failed for ${intake.email}: ${emailError}`);
+      console.error(`[RESEND] Gmail send failed for intake ${id}: ${emailError}`);
       return apiError(`Email send failed: ${emailError}`);
     }
 
-    console.log(`[RESEND] Gmail send succeeded — messageId: ${messageId}`);
+    console.log(`[RESEND] Gmail send succeeded for intake ${id} — messageId: ${messageId}`);
     return NextResponse.json({ success: true, messageId });
   } catch (e) {
     return apiError(getErrorMessage(e));

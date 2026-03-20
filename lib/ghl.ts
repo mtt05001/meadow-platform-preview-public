@@ -123,17 +123,17 @@ export async function getOpportunityWithFacilitator(
     const params = new URLSearchParams({
       location_id: LOCATION_ID,
       contact_id: contactId,
-      limit: "1",
+      limit: "5",
     });
     const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
       opportunities?: Record<string, unknown>[];
     };
 
     const opps = data.opportunities || [];
-    if (!opps.length)
+    // Prefer journey pipeline, fall back to first
+    const opp = opps.find((o) => o.pipelineId === PIPELINE_ID) || opps[0];
+    if (!opp)
       return { opportunity: null, facilitatorEmail: null, error: "No opportunity found" };
-
-    const opp = opps[0];
     let facilitatorEmail: string | null = null;
     const customFields = (opp.customFields as { name?: string; value?: string }[]) || [];
     for (const field of customFields) {
