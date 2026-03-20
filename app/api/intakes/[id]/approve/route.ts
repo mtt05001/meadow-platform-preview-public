@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { claimIntakeForSending, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator, addNote, updateOpportunity, getAppUrl } from "@/lib/ghl";
-import { sendEmail } from "@/lib/gmail";
+import { searchContact, getOpportunityWithFacilitator, addNote, updateOpportunity, getAppUrl, triggerWebhook } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
 
@@ -58,37 +57,43 @@ export async function POST(
       return apiError("Intake is not pending — may have already been approved", 409);
     }
 
-    // --- STEP 2: Send email to patient via Gmail API ---
-    const subject = `Meadow Medication Guidance - ${clientName}`;
-    console.log(`[APPROVE] Sending email to ${clientEmail}${facilitatorEmail ? ` (cc: ${facilitatorEmail})` : ""}`);
-    const { ok, messageId, error: emailError } = await sendEmail(
-      clientEmail,
-      subject,
-      cleanEmail,
-      facilitatorEmail || undefined,
-    );
+    // --- STEP 2: Fire GHL webhook (sends email to patient) ---
+    const webhookPayload = {
+      contact: { email: clientEmail, name: clientName },
+      custom: {
+        email_subject: `Meadow Medication Guidance - ${clientName}`,
+        medication_guidance: cleanEmail,
+        risk_stratification: riskStratification,
+        approved_by: approvedBy,
+        intake_id: id,
+        facilitator_email: facilitatorEmail || "",
+        is_test: false,
+      },
+    };
+
+    console.log(`[APPROVE] Triggering GHL webhook for ${clientEmail}`);
+    const { ok, error: webhookError } = await triggerWebhook(webhookPayload);
     if (!ok) {
-      console.error(`[APPROVE] Gmail send failed for ${clientEmail}: ${emailError}`);
-      // Revert to pending — email failed
+      console.error(`[APPROVE] GHL webhook failed for ${clientEmail}: ${webhookError}`);
+      // Revert to pending — webhook failed, no email was sent
       await updateIntakeFields(id, {
         status: "pending",
         approved_by: null,
         approved_at: null,
       });
-      return apiError(`Email send failed: ${emailError}`);
+      return apiError(`GHL webhook failed: ${webhookError}`);
     }
-    console.log(`[APPROVE] Gmail send succeeded — messageId: ${messageId}`);
+    console.log(`[APPROVE] GHL webhook triggered successfully`);
 
     // --- STEP 3: Mark as approved ---
     try {
       await updateIntakeFields(id, { status: "approved" });
     } catch (dbErr) {
-      // Email was sent but final status update failed — stuck on "sending"
       console.error(`[APPROVE] DB update to "approved" failed for ${id}:`, dbErr);
       return NextResponse.json({
         success: true,
         partial: true,
-        message: "Email sent but status update failed — record stuck on 'sending'",
+        message: "Webhook triggered but status update failed — record stuck on 'sending'",
         intake_id: id,
         facilitator_email: facilitatorEmail,
       });
@@ -114,7 +119,7 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Email sent and GHL updated",
+      message: "Webhook triggered and GHL updated",
       intake_id: id,
       facilitator_email: facilitatorEmail,
     });
