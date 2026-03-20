@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { getIntakes, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator, GHL_FIELDS, cfVal } from "@/lib/ghl";
+import { searchContact, getOpportunityWithFacilitator, fetchOpportunityDetails, GHL_FIELDS, cfVal } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
 
 function fmtDate(d: string | null): string | null {
   if (!d) return null;
-  return d.slice(0, 10); // already ISO
+  // GHL calendar fields return epoch milliseconds
+  const n = Number(d);
+  if (!isNaN(n) && n > 1e12) {
+    return new Date(n).toISOString().slice(0, 10);
+  }
+  // Already ISO-ish
+  return d.slice(0, 10);
 }
 
 export async function POST() {
@@ -34,15 +40,20 @@ export async function POST() {
           const { opportunity } = await getOpportunityWithFacilitator(contact.id);
           if (!opportunity) return "no_opportunity";
 
-          const cfs = (opportunity.customFields || []) as {
+          // Fetch full opportunity details — search endpoint omits some field values
+          const oppId = opportunity.id as string;
+          const fullOpp = await fetchOpportunityDetails(oppId);
+          const cfs = ((fullOpp.customFields || []) as {
             id?: string;
             fieldValue?: string;
             fieldValueString?: string;
             value?: string;
-          }[];
+          }[]);
 
-          const prep1 = fmtDate(cfVal(cfs, GHL_FIELDS.PREP1_DATE));
+          const prep1Raw = cfVal(cfs, GHL_FIELDS.PREP1_DATE);
+          const prep1 = fmtDate(prep1Raw);
           const facilitator = cfVal(cfs, GHL_FIELDS.LEAD_FACILITATOR) || null;
+          if (prep1Raw) console.log(`[sync-ghl] ${intake.name}: prep1 raw="${prep1Raw}" → "${prep1}"`);
 
           const fields: Record<string, string | null> = {};
           if (prep1) fields.prep1_date = prep1;
