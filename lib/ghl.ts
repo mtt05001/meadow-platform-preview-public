@@ -73,6 +73,7 @@ async function ghlFetch(
   const token = getToken();
   const res = await fetch(`${GHL_BASE}${path}`, {
     ...options,
+    cache: "no-store",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",

@@ -13,7 +13,7 @@ export async function fetchRecentSubmissions(
 ): Promise<Record<string, unknown>[]> {
   const key = getApiKey();
   const url = `${JOTFORM_BASE}/form/${formId}/submissions?apiKey=${key}&limit=${limit}&orderby=created_at`;
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Jotform API ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as { content?: Record<string, unknown>[] };
   return data.content || [];
@@ -24,7 +24,7 @@ export async function fetchSubmissionById(
 ): Promise<Record<string, unknown> | null> {
   const key = getApiKey();
   const url = `${JOTFORM_BASE}/submission/${submissionId}?apiKey=${key}`;
-  const res = await fetch(url);
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`Jotform API ${res.status}: ${await res.text()}`);
   const data = (await res.json()) as { content?: Record<string, unknown> };
   return data.content || null;

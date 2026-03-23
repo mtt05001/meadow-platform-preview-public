@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import type { McData, McEvent, McAlert } from "@/lib/mission-control-types";
 
+export const dynamic = "force-dynamic";
+
 // GHL IDs
 const LOCATION = "A4AjOJ6RQgzEHxtmZsOr";
 const GEN_GROUP = "FHsE7quFyn9m6GLUBFIL";
@@ -60,6 +62,7 @@ async function ghlFetch(
       Version: ver,
       "Content-Type": "application/json",
     },
+    cache: "no-store",
   });
   if (!r.ok) {
     const body = await r.text();
