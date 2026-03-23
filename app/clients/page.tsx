@@ -170,36 +170,10 @@ export default function ClientsPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
-      <Nav subtitle="Client List" sticky>
-        <button
-          onClick={() => syncMutation.mutate()}
-          disabled={syncMutation.isPending}
-          className="
-            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
-            bg-[#1a4d2e] text-white border border-white/20
-            hover:bg-[#2d7a4a] transition-all duration-150
-            disabled:opacity-50 disabled:cursor-not-allowed
-            flex items-center gap-1.5
-          "
-        >
-          {syncMutation.isPending ? (
-            <>
-              <Spinner /> Syncing...
-            </>
-          ) : (
-            "Sync GHL"
-          )}
-        </button>
-        {lastSynced && (
-          <div className="flex items-center gap-2 text-[13px] text-white/85">
-            <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-            <span>Synced {formatTimestamp(lastSynced)}</span>
-          </div>
-        )}
-      </Nav>
+      <Nav subtitle="Client List" sticky />
 
-      {/* Filters */}
       <main className="max-w-[1600px] mx-auto px-6 md:px-8 py-6">
+        {/* Filters & actions */}
         <div className="flex flex-wrap items-center gap-3 mb-5">
           <input
             type="text"
@@ -244,9 +218,33 @@ export default function ClientsPage() {
             <option value="Sent">Sent</option>
             <option value="None">None</option>
           </select>
-          <div className="ml-auto text-[13px] text-[#7f8c8d]">
-            {sorted.length} client{sorted.length !== 1 && "s"}
-            {clients.length !== sorted.length && ` of ${clients.length}`}
+          <div className="ml-auto flex items-center gap-3">
+            {lastSynced && (
+              <div className="flex items-center gap-1.5 text-[12px] text-[#7f8c8d]">
+                <span className="w-1.5 h-1.5 bg-[#2ecc71] rounded-full animate-pulse" />
+                <span>Synced {formatTimestamp(lastSynced)}</span>
+              </div>
+            )}
+            <div className="text-[13px] text-[#7f8c8d]">
+              {sorted.length} client{sorted.length !== 1 && "s"}
+              {clients.length !== sorted.length && ` of ${clients.length}`}
+            </div>
+            <div className="w-px h-6 bg-[#e0d9ce]" />
+            <button
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+              title="Pull latest client data, pipeline stages, and dates from GoHighLevel"
+              className="
+                px-3 py-2 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e0d9ce] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-1.5
+              "
+            >
+              {syncMutation.isPending ? <Spinner /> : <SyncIcon />}
+              Sync GHL
+            </button>
           </div>
         </div>
 
@@ -273,43 +271,43 @@ export default function ClientsPage() {
                 <TableRow className="bg-[#f9f7f4] hover:bg-[#f9f7f4]">
                   <TableHead className="w-10 text-center text-[11px]">#</TableHead>
                   <TableHead>
-                    <button onClick={() => toggleSort("name")} className="flex items-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("name")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Name <SortIcon col="name" />
                     </button>
                   </TableHead>
                   <TableHead>
-                    <button onClick={() => toggleSort("stage_order")} className="flex items-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("stage_order")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Stage <SortIcon col="stage_order" />
                     </button>
                   </TableHead>
                   <TableHead>
-                    <button onClick={() => toggleSort("email")} className="flex items-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("email")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Email <SortIcon col="email" />
                     </button>
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide">Phone</TableHead>
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide">Phone</TableHead>
                   <TableHead className="text-center">
-                    <button onClick={() => toggleSort("prep1")} className="flex items-center justify-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("prep1")} className="flex items-center justify-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       P1 <SortIcon col="prep1" />
                     </button>
                   </TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide">P2</TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide">IP-P</TableHead>
+                  <TableHead className="text-center text-xs font-semibold uppercase tracking-wide">P2</TableHead>
+                  <TableHead className="text-center text-xs font-semibold uppercase tracking-wide">IP-P</TableHead>
                   <TableHead className="text-center">
-                    <button onClick={() => toggleSort("journey")} className="flex items-center justify-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("journey")} className="flex items-center justify-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Jrny <SortIcon col="journey" />
                     </button>
                   </TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide">IP-I</TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide">I1</TableHead>
-                  <TableHead className="text-center text-[11px] font-semibold uppercase tracking-wide">I2</TableHead>
+                  <TableHead className="text-center text-xs font-semibold uppercase tracking-wide">IP-I</TableHead>
+                  <TableHead className="text-center text-xs font-semibold uppercase tracking-wide">I1</TableHead>
+                  <TableHead className="text-center text-xs font-semibold uppercase tracking-wide">I2</TableHead>
                   <TableHead>
-                    <button onClick={() => toggleSort("hi_status")} className="flex items-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("hi_status")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       HI <SortIcon col="hi_status" />
                     </button>
                   </TableHead>
                   <TableHead>
-                    <button onClick={() => toggleSort("chart_status")} className="flex items-center text-[11px] font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                    <button onClick={() => toggleSort("chart_status")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Chart <SortIcon col="chart_status" />
                     </button>
                   </TableHead>
@@ -322,7 +320,7 @@ export default function ClientsPage() {
                     onClick={() => setSelectedClient(client)}
                     className="cursor-pointer hover:bg-[#f5f1eb]/60 transition-colors"
                   >
-                    <TableCell className="text-center text-[12px] text-[#b0b8c0]">
+                    <TableCell className="text-center text-sm text-[#b0b8c0]">
                       {i + 1}
                     </TableCell>
                     <TableCell>
@@ -330,49 +328,49 @@ export default function ClientsPage() {
                         {client.name}
                       </div>
                       {client.facilitator && (
-                        <div className="text-[11px] text-[#7f8c8d]">
+                        <div className="text-xs text-[#7f8c8d]">
                           {client.facilitator}
                         </div>
                       )}
                     </TableCell>
                     <TableCell>
                       <span
-                        className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium ${stageGroupColors[client.stage_group] || ""}`}
+                        className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${stageGroupColors[client.stage_group] || ""}`}
                       >
                         {client.stage_name}
                       </span>
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d] max-w-[180px] truncate">
+                    <TableCell className="text-sm text-[#5a6c7d] max-w-[180px] truncate">
                       {client.email}
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d] whitespace-nowrap">
+                    <TableCell className="text-sm text-[#5a6c7d] whitespace-nowrap">
                       {client.phone}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.prep1)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.prep2)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.ip_prep)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.journey)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.ip_integ)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.integ1)}
                     </TableCell>
-                    <TableCell className="text-center text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
                       {fmtShortDate(client.integ2)}
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-sm text-[#5a6c7d]">
                       {client.hi_status}
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-sm text-[#5a6c7d]">
                       {client.chart_status}
                     </TableCell>
                   </TableRow>
@@ -395,25 +393,20 @@ export default function ClientsPage() {
 
 function Spinner() {
   return (
-    <svg
-      className="w-3.5 h-3.5 animate-spin"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        stroke="currentColor"
-        strokeWidth="2"
-        opacity="0.3"
-      />
-      <path
-        d="M14 8a6 6 0 0 0-6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+      <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SyncIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 8a5.5 5.5 0 0 1 9.3-4" />
+      <path d="M13.5 8a5.5 5.5 0 0 1-9.3 4" />
+      <path d="M11.5 2v2.5H14" />
+      <path d="M4.5 14v-2.5H2" />
     </svg>
   );
 }

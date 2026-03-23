@@ -189,19 +189,19 @@ export default function AdminPage() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-[#f9f7f4] hover:bg-[#f9f7f4]">
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-[#5a6c7d]">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-[#5a6c7d]">
                     Name
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-[#5a6c7d]">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-[#5a6c7d]">
                     Email
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-[#5a6c7d]">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-[#5a6c7d]">
                     Role
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-[#5a6c7d]">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-[#5a6c7d]">
                     Last Sign In
                   </TableHead>
-                  <TableHead className="text-[11px] font-semibold uppercase tracking-wide text-[#5a6c7d]">
+                  <TableHead className="text-xs font-semibold uppercase tracking-wide text-[#5a6c7d]">
                     Joined
                   </TableHead>
                 </TableRow>
@@ -221,18 +221,18 @@ export default function AdminPage() {
                             className="w-7 h-7 rounded-full ring-1 ring-[#e8e2d8]"
                           />
                         ) : (
-                          <div className="w-7 h-7 rounded-full bg-[#e8e2d8] flex items-center justify-center text-[11px] font-medium text-[#7f8c8d]">
+                          <div className="w-7 h-7 rounded-full bg-[#e8e2d8] flex items-center justify-center text-xs font-medium text-[#7f8c8d]">
                             {(user.firstName?.[0] ?? user.email[0]).toUpperCase()}
                           </div>
                         )}
-                        <span className="text-[13px] font-medium text-[#2c3e50]">
+                        <span className="text-sm font-medium text-[#2c3e50]">
                           {[user.firstName, user.lastName]
                             .filter(Boolean)
                             .join(" ") || "\u2014"}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-sm text-[#5a6c7d]">
                       {user.email}
                     </TableCell>
                     <TableCell>
@@ -246,7 +246,7 @@ export default function AdminPage() {
                         }
                         disabled={roleMutation.isPending}
                         className={`
-                          px-2 py-0.5 rounded-full text-[11px] font-semibold border
+                          px-2 py-0.5 rounded-full text-xs font-semibold border
                           cursor-pointer appearance-none text-center
                           focus:outline-none focus:ring-2
                           disabled:opacity-50 disabled:cursor-not-allowed
@@ -259,10 +259,10 @@ export default function AdminPage() {
                         <option value="client">Client</option>
                       </select>
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-sm text-[#5a6c7d]">
                       {formatDate(user.lastSignInAt)}
                     </TableCell>
-                    <TableCell className="text-[12px] text-[#5a6c7d]">
+                    <TableCell className="text-sm text-[#5a6c7d]">
                       {formatDate(user.createdAt)}
                     </TableCell>
                   </TableRow>

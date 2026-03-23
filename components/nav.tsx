@@ -22,11 +22,9 @@ const navLinks: NavLink[] = [
 export default function Nav({
   subtitle = "Health Intake Review Platform",
   sticky = false,
-  children,
 }: {
   subtitle?: string;
   sticky?: boolean;
-  children?: React.ReactNode;
 }) {
   const pathname = usePathname();
   const { user } = useUser();
@@ -70,7 +68,6 @@ export default function Nav({
               </Link>
             );
           })}
-          {children}
           <UserButton />
         </div>
       </div>

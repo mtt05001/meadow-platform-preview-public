@@ -162,23 +162,33 @@ export default function MissionControlPage() {
 
   return (
     <>
-      <Nav subtitle="Mission Control">
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="px-3 py-1.5 rounded-md text-sm font-medium bg-white/15 text-white hover:bg-white/25 disabled:opacity-50 transition-all"
-        >
-          {isFetching ? "Refreshing..." : "Refresh"}
-        </button>
-      </Nav>
+      <Nav subtitle="Mission Control" />
 
       <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
-        {/* Timestamp */}
-        {data && (
-          <p className="text-xs text-bark-light mb-4">
-            {formatTimestamp(data.generated)}
-          </p>
-        )}
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          {data && (
+            <p className="text-xs text-bark-light">
+              {formatTimestamp(data.generated)}
+            </p>
+          )}
+          <div className="ml-auto">
+            <button
+              onClick={() => refetch()}
+              disabled={isFetching}
+              title="Reload the 7-day forecast from GoHighLevel calendar data"
+              className="
+                px-3 py-2 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e0d9ce] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-1.5
+              "
+            >
+              {isFetching ? "Refreshing..." : "Refresh"}
+            </button>
+          </div>
+        </div>
 
         {/* Stats bar */}
         {data && (

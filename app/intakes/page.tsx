@@ -105,76 +105,72 @@ export default function IntakesPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
-      <Nav sticky>
-        <button
-          onClick={() => syncGhl.mutate()}
-          disabled={syncGhl.isPending}
-          className="
-            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
-            bg-[#1a4d2e] text-white border border-white/20
-            hover:bg-[#2d7a4a] transition-all duration-150
-            disabled:opacity-50 disabled:cursor-not-allowed
-            flex items-center gap-1.5
-          "
-        >
-          {syncGhl.isPending ? (
-            <>
-              <Spinner /> Syncing...
-            </>
-          ) : (
-            "🔄 Sync GHL"
-          )}
-        </button>
-        <button
-          onClick={() => syncJotform.mutate()}
-          disabled={syncJotform.isPending}
-          className="
-            px-3.5 py-[7px] rounded-[6px] text-[13px] font-semibold
-            bg-[#1a4d2e] text-white border border-white/20
-            hover:bg-[#2d7a4a] transition-all duration-150
-            disabled:opacity-50 disabled:cursor-not-allowed
-            flex items-center gap-1.5
-          "
-        >
-          {syncJotform.isPending ? (
-            <>
-              <Spinner /> Syncing...
-            </>
-          ) : (
-            "🔄 Refresh"
-          )}
-        </button>
-      </Nav>
+      <Nav sticky />
 
       {/* Content */}
       <main className="max-w-[1400px] mx-auto px-6 md:px-8 py-6">
         {/* Header row */}
         <div className="mb-6 flex items-center gap-4">
-          <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
-            Review Queue
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
+              Review Queue
+            </h2>
+            {lastUpdated && (
+              <div className="flex items-center gap-1.5 text-[12px] text-[#7f8c8d]">
+                <span className="w-1.5 h-1.5 bg-[#2ecc71] rounded-full animate-pulse" />
+                <span>Updated {formatTimestamp(lastUpdated)}</span>
+              </div>
+            )}
+          </div>
           <div className="flex-1" />
-          {lastUpdated && (
-            <div className="flex items-center gap-2 text-[13px] text-[#7f8c8d]">
-              <span className="w-2 h-2 bg-[#2ecc71] rounded-full animate-pulse" />
-              <span>Updated {formatTimestamp(lastUpdated)}</span>
-            </div>
-          )}
-          <input
-            type="text"
-            placeholder="Search by name..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setVisibleCount(PAGE_SIZE);
-            }}
-            className="
-              px-3 py-2 rounded-[6px] border border-[#e8e2d8] bg-white
-              text-[14px] text-[#2c3e50] placeholder:text-[#b8bfc6]
-              w-[260px] focus:outline-none focus:border-[#1a4d2e]
-              transition-colors
-            "
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search by name..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setVisibleCount(PAGE_SIZE);
+              }}
+              className="
+                px-3 py-2 rounded-[6px] border border-[#e8e2d8] bg-white
+                text-[14px] text-[#2c3e50] placeholder:text-[#b8bfc6]
+                w-[220px] focus:outline-none focus:border-[#1a4d2e]
+                transition-colors
+              "
+            />
+            <div className="w-px h-6 bg-[#e0d9ce]" />
+            <button
+              onClick={() => syncGhl.mutate()}
+              disabled={syncGhl.isPending}
+              title="Pull latest dates, facilitators, and statuses from GoHighLevel"
+              className="
+                px-3 py-2 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e0d9ce] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-1.5
+              "
+            >
+              {syncGhl.isPending ? <Spinner /> : <SyncIcon />}
+              Sync GHL
+            </button>
+            <button
+              onClick={() => syncJotform.mutate()}
+              disabled={syncJotform.isPending}
+              title="Check Jotform for new health intake submissions"
+              className="
+                px-3 py-2 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e0d9ce] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors
+                disabled:opacity-50 disabled:cursor-not-allowed
+                flex items-center gap-1.5
+              "
+            >
+              {syncJotform.isPending ? <Spinner /> : <RefreshIcon />}
+              Fetch New Forms
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -261,25 +257,30 @@ export default function IntakesPage() {
 
 function Spinner() {
   return (
-    <svg
-      className="w-3.5 h-3.5 animate-spin"
-      viewBox="0 0 16 16"
-      fill="none"
-    >
-      <circle
-        cx="8"
-        cy="8"
-        r="6"
-        stroke="currentColor"
-        strokeWidth="2"
-        opacity="0.3"
-      />
-      <path
-        d="M14 8a6 6 0 0 0-6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+    <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
+      <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+      <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SyncIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2.5 8a5.5 5.5 0 0 1 9.3-4" />
+      <path d="M13.5 8a5.5 5.5 0 0 1-9.3 4" />
+      <path d="M11.5 2v2.5H14" />
+      <path d="M4.5 14v-2.5H2" />
+    </svg>
+  );
+}
+
+function RefreshIcon() {
+  return (
+    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M13.5 6.5H9.5" />
+      <path d="M13.5 6.5V2.5" />
+      <path d="M13.5 6.5L10.2 3.2A5.5 5.5 0 1 0 13 10.5" />
     </svg>
   );
 }
