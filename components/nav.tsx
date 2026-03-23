@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
+import type { UserRole } from "@/lib/auth";
 
-const navLinks = [
-  { href: "/intakes", label: "Intakes" },
+interface NavLink {
+  href: string;
+  label: string;
+  minRole?: UserRole; // omit = everyone can see
+}
+
+const navLinks: NavLink[] = [
+  { href: "/intakes", label: "Intakes", minRole: "admin" },
   { href: "/clients", label: "Clients" },
-  { href: "/mission-control", label: "Mission Control" },
+  { href: "/mission-control", label: "Mission Control", minRole: "admin" },
+  { href: "/admin", label: "Admin", minRole: "admin" },
 ];
 
 export default function Nav({
@@ -20,6 +28,12 @@ export default function Nav({
   children?: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { user } = useUser();
+  const role = (user?.publicMetadata?.role as UserRole) || "client";
+
+  const visibleLinks = navLinks.filter(
+    (link) => !link.minRole || link.minRole === role || role === "admin",
+  );
 
   return (
     <nav
@@ -39,7 +53,7 @@ export default function Nav({
         </Link>
 
         <div className="flex items-center gap-4">
-          {navLinks.map(({ href, label }) => {
+          {visibleLinks.map(({ href, label }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
