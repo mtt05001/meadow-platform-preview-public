@@ -2,13 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const TRACY_PROMPT = `You are Dr. Tracy Townsend, MD, Medical Director at Meadow Medicine. You are reviewing a health intake form for a client preparing for a psilocybin-assisted therapy journey.
 
-Based on the client's health intake data below, generate TWO outputs:
+Based on the client's health intake data below, generate TWO outputs separated by the marker ===SEPARATOR===
 
-## OUTPUT 1: CLIENT-FACING EMAIL (Medication Guidance)
+## EMAIL
 
-Write a warm, professional email to the client with the following sections:
-
-**Subject line:** Medication Guidance for Your Upcoming Journey
+Write the email directly — start with "Dear [First Name]," and do NOT include any headers, labels, or subject lines before the greeting. The email should have these sections:
 
 Dear [Client First Name],
 
@@ -64,9 +62,9 @@ Warm regards,
 Tracy Townsend,
 Meadow Medicine
 
-## OUTPUT 2: INTERNAL RISK STRATIFICATION (for clinical team only)
+## RISK STRATIFICATION
 
-Provide a structured clinical summary in this EXACT section order:
+Provide a structured clinical summary (for internal clinical team only) in this EXACT section order:
 
 ### Client Information
 - Name, age, sex, DOB
@@ -106,7 +104,7 @@ Provide a structured clinical summary in this EXACT section order:
 ---
 
 IMPORTANT RULES:
-- Separate the two outputs with the marker: ===SEPARATOR===
+- The email must start directly with "Dear [Name]," — no headers, labels, or subject lines before it
 - The client email should be warm but professional
 - The risk stratification should be clinical and thorough
 - Be specific about half-lives and hold periods
@@ -151,8 +149,8 @@ export async function generateAiOutput(
     const responseText =
       message.content[0].type === "text" ? message.content[0].text : "";
 
-    let emailText: string;
-    let riskStrat: string;
+    let emailText = "";
+    let riskStrat = "";
 
     if (responseText.includes("===SEPARATOR===")) {
       const parts = responseText.split("===SEPARATOR===", 2);
@@ -161,6 +159,7 @@ export async function generateAiOutput(
     } else {
       // Fallback split markers
       const markers = [
+        "## RISK STRATIFICATION",
         "## OUTPUT 2",
         "## INTERNAL RISK",
         "# INTERNAL RISK",
@@ -182,30 +181,16 @@ export async function generateAiOutput(
       }
     }
 
-    // Clean up email — remove OUTPUT 1 header
-    for (const prefix of [
-      "## OUTPUT 1:",
-      "## OUTPUT 1",
-      "# OUTPUT 1",
-      "**OUTPUT 1**",
-      "## CLIENT-FACING EMAIL",
-    ]) {
-      if (emailText!.startsWith(prefix)) {
-        emailText = emailText!.slice(prefix.length).trim();
-        break;
-      }
+    // Clean up email — strip everything before "Dear" (catches leaked headers, subject lines, etc.)
+    const dearIdx = emailText.search(/^Dear\s/im);
+    if (dearIdx > 0) {
+      emailText = emailText.slice(dearIdx);
     }
-
-    // Remove "Subject line:" prefix
-    emailText = emailText!.replace(
-      /^\*?\*?Subject line:\*?\*?[^\n]*\n*/im,
-      "",
-    );
 
     return {
       result: {
         email: emailText,
-        risk_stratification: riskStrat!,
+        risk_stratification: riskStrat,
         raw_response: responseText,
         model: "claude-sonnet-4-20250514",
         generated_at: new Date().toISOString(),
