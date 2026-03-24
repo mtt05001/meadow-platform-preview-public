@@ -15,12 +15,13 @@ Dear [Client First Name],
 Based on your health intake, below is your personalized guidance regarding medications, supplements, and substances to support safety and depth during your psilocybin journey. Please review with your prescribing provider, and let me know if you have any questions.
 
 ### Medication Guidance
-- For each medication the client is taking, provide specific guidance
+- For each medication the client is taking, provide specific guidance. If a medication is safe to continue as prescribed, simply say "Continue taking as prescribed"
 - PPIs (proton pump inhibitors): hold for 5 half-lives before journey
 - GLP-1 receptor agonists (Wegovy, Ozempic, Mounjaro, etc.): hold for 5 half-lives before journey. Wegovy (semaglutide) has a half-life of ~1 week, so hold for ~5 weeks before journey
 - If client had gastric sleeve: recommend powdered psilocybin in applesauce
 - Amitriptyline: hold 10 days before journey
-- SSRIs/SNRIs: note that these may reduce the effects of psilocybin. The client should discuss with their prescriber about a potential taper, but DO NOT instruct them to stop without medical supervision
+- SSRIs (e.g. sertraline): present two options. Option A (optimize experience): Gradually taper off with prescribing provider and allow for a ~6-week washout prior to journey. Option B (continue medication): Stay on it, understanding the experience may be slightly blunted; a higher dose of psilocybin can be considered. Note that the medication should not be stopped abruptly.
+- SNRIs: same approach as SSRIs — present Option A (taper with provider) and Option B (continue). Do NOT instruct them to stop without medical supervision
 - Buspirone: must stop 2 weeks before journey
 - ADHD stimulants: hold on day of journey
 - Serotonergic supplements (5-HTP, St. John's Wort, SAMe): hold 2 weeks before
@@ -30,6 +31,7 @@ Based on your health intake, below is your personalized guidance regarding medic
 
 ### Supplement Guidance
 - Review each supplement and provide guidance
+- If a supplement is safe to continue, simply say "Safe to continue"
 - Note any that should be held before the journey
 
 ### Substance Use Guidance
@@ -40,11 +42,11 @@ These are general guidelines provided to all clients:
 
 - **Cannabis**: Please hold all cannabis use for 7 days prior to your journey and 6 weeks after to allow for optimal integration. Cannabis is held before and after the journey because it can blunt emotional processing beforehand. Sensitivity to cannabis increases significantly after a psychedelic experience, and can produce psychedelic effects.
 
-- **Alcohol**: Please hold alcohol for 7 days prior and 7 days after your journey. Alcohol is held before and after the journey because it can interfere with emotional clarity, sleep quality, and nervous system regulation.
+- **Alcohol**: Please hold alcohol for 7 days prior and 6 weeks after your journey. Alcohol is held before and after the journey because it can interfere with emotional clarity, sleep quality, and nervous system regulation.
 
-- **Caffeine**: Please taper your caffeine intake to no more than 1 cup of coffee or tea per day. You may have 1 cup on the morning of your journey if needed.
+- **Caffeine**: Please taper your caffeine intake to no more than 1 cup per day. You may have 1 cup on the morning of your journey if needed to avoid withdrawal headaches.
 
-- **Nicotine/Vaping**: Nicotine is generally permitted. I encourage you to begin to slowly reduce your intake in the week leading up to your journey.
+- **Nicotine/Vaping**: Nicotine is generally permitted. You are encouraged to taper down use prior to the journey, and to avoid acute overuse.
 
 ### Day-of-Journey Notes
 
@@ -52,23 +54,34 @@ COPY THIS SECTION VERBATIM — DO NOT CHANGE ANY WORDING:
 
 Take only medications explicitly approved above. If there are any changes to your medications, supplements, or substance use, please let us know.
 
-In the morning, you can choose to either fast or have a light breakfast, whatever is going to help your stomach feel most at ease. Finish your breakfast at least 1 hour prior to your arrival at the center.
+In the morning, you can choose to either fast or have a light breakfast with protein, whatever is going to help your stomach feel most at ease. Finish your breakfast at least 1 hour prior to your arrival at the center.
 
 Make sure you are well hydrated coming into the experience as well. You may pre-hydrate the morning of your journey with ginger tea. Your facilitator can provide this to you the day prior at your preparation session.
 
 It is an honor and a privilege to support you through your healing process. Thank you for choosing us.
 
 Warm regards,
-Tracy Townsend, MD
-Medical Director, Meadow Medicine
+Tracy Townsend,
+Meadow Medicine
 
 ## OUTPUT 2: INTERNAL RISK STRATIFICATION (for clinical team only)
 
-Provide a structured clinical summary:
+Provide a structured clinical summary in this EXACT section order:
 
 ### Client Information
 - Name, age, sex, DOB
-- Height, weight, BMI (calculate if possible)
+- Height, weight, BMI (calculate if possible — do NOT comment on weight status like "overweight" or "obese")
+
+### Risk Assessment
+- Overall Risk Tier (green/yellow/red) with brief justification
+- Risk Score (out of 10)
+- Do NOT label items as "hard contraindications" or "soft contraindications" — just state the clinical findings
+
+### Key Considerations
+- Any special clinical considerations
+
+### Recommendations for Facilitator Team
+- Clinical recommendations for the facilitator team
 
 ### Medical History
 - All conditions reported
@@ -90,23 +103,15 @@ Provide a structured clinical summary:
 ### Substance Use
 - Alcohol, cannabis, tobacco, caffeine, other
 
-### Risk Assessment
-- Overall risk tier with justification
-- Hard contraindications found (if any)
-- Soft contraindication score and details
-
-### Key Considerations
-- Any special clinical considerations
-- Recommendations for the facilitator team
-- Any follow-up needed before journey can proceed
-
 ---
 
-IMPORTANT FORMATTING:
+IMPORTANT RULES:
 - Separate the two outputs with the marker: ===SEPARATOR===
 - The client email should be warm but professional
 - The risk stratification should be clinical and thorough
 - Be specific about half-lives and hold periods
+- NEVER use the phrase "client cleared" anywhere in either output
+- Do NOT include "Follow up needed before journey" or "Next steps" sections
 - If you don't have enough information about something, note it as needing follow-up`;
 
 export interface AiResult {
