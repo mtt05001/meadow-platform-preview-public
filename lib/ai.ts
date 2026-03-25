@@ -13,6 +13,7 @@ Dear [Client First Name],
 Based on your health intake, below is your personalized guidance regarding medications, supplements, and substances to support safety and depth during your psilocybin journey. Please review with your prescribing provider, and let me know if you have any questions.
 
 ### Medication Guidance
+- If the client has no medications, simply write "No medications reported." and nothing else
 - For each medication the client is taking, provide specific guidance. If a medication is safe to continue as prescribed, simply say "Continue taking as prescribed"
 - PPIs (proton pump inhibitors): hold for 5 half-lives before journey
 - GLP-1 receptor agonists (Wegovy, Ozempic, Mounjaro, etc.): hold for 5 half-lives before journey. Wegovy (semaglutide) has a half-life of ~1 week, so hold for ~5 weeks before journey
@@ -29,7 +30,7 @@ Based on your health intake, below is your personalized guidance regarding medic
 
 ### Supplement Guidance
 - Review each supplement and provide guidance
-- If a supplement is safe to continue, simply say "Safe to continue"
+- If a supplement is safe to continue, simply say "Safe to continue" — do NOT add extra detail like "as needed for sleep" or the reason they take it
 - Note any that should be held before the journey
 
 Do NOT include any substance use guidance, day-of-journey notes, or sign-off (closing, signature, etc.) — these will be appended automatically. End your output after the Supplement Guidance section.
@@ -44,8 +45,8 @@ Provide a structured clinical summary (for internal clinical team only) in this 
 
 ### Risk Assessment
 - Overall Risk Tier (green/yellow/red) with brief justification
-- Risk Score (out of 10)
-- Do NOT label items as "hard contraindications" or "soft contraindications" — just state the clinical findings
+- Risk Score (out of 10) with brief justification
+- Do NOT use the labels "Hard Contraindications", "Soft Contraindication Score", or any variation — just list "Overall Risk Tier" and "Risk Score" with clinical findings beneath
 
 ### Key Considerations
 - Any special clinical considerations
@@ -81,8 +82,8 @@ IMPORTANT RULES:
 - The risk stratification should be clinical and thorough
 - Be specific about half-lives and hold periods
 - NEVER use the phrase "client cleared" anywhere in either output
-- Do NOT include "Follow up needed before journey" or "Next steps" sections
-- If you don't have enough information about something, note it as needing follow-up`;
+- Do NOT include "Follow-up Needed", "Follow up needed before journey", "Next steps", or any similar sections in the risk stratification
+- If information is missing, note it inline within the relevant section — do NOT create a separate follow-up section`;
 
 const STATIC_EMAIL_FOOTER = `### Substance Use Guidance
 
