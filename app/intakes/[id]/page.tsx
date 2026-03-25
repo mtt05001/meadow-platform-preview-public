@@ -58,6 +58,7 @@ export default function IntakeDetailPage() {
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [regenerateGuidance, setRegenerateGuidance] = useState("");
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [riskSaveStatus, setRiskSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
@@ -261,6 +262,7 @@ export default function IntakeDetailPage() {
       toast.success("Feedback saved! Thank you for helping improve the AI.");
       setFeedbackType("");
       setFeedbackText("");
+      setFeedbackOpen(false);
     },
     onError: (e) => toast.error("Failed to save feedback: " + e.message),
   });
@@ -364,24 +366,8 @@ export default function IntakeDetailPage() {
           </div>
         )}
 
-        {/* Regenerate AI link + Two-column editor grid */}
-        {!isApproved && (
-          <div className="flex items-center justify-end mb-2">
-            <button
-              onClick={() => setRegenerateOpen(true)}
-              disabled={regenerateAi.isPending}
-              className="
-                text-[13px] text-[#7f8c8d] hover:text-[#1a4d2e]
-                transition-colors cursor-pointer
-                bg-transparent border-none
-                disabled:opacity-50 disabled:cursor-not-allowed
-              "
-            >
-              {regenerateAi.isPending ? "Generating..." : "↻ Regenerate AI"}
-            </button>
-          </div>
-        )}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+        {/* Two-column editor grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-4">
           {/* Risk Stratification */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
             <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold flex items-center justify-between">
@@ -416,6 +402,44 @@ export default function IntakeDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* AI toolbar — grouped controls for regenerate, feedback, prompt */}
+        {!isApproved && (
+          <div className="flex items-center gap-2 mb-4">
+            <button
+              onClick={() => setRegenerateOpen(true)}
+              disabled={regenerateAi.isPending}
+              className="
+                px-3 py-1.5 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e8e2d8] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors cursor-pointer
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+            >
+              {regenerateAi.isPending ? "Generating..." : "↻ Regenerate AI"}
+            </button>
+            <button
+              onClick={() => setFeedbackOpen(true)}
+              className="
+                px-3 py-1.5 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e8e2d8] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors cursor-pointer
+              "
+            >
+              💬 Leave Feedback
+            </button>
+            <button
+              onClick={() => setAiSheetOpen(true)}
+              className="
+                px-3 py-1.5 rounded-[6px] text-[13px] font-medium
+                bg-white border border-[#e8e2d8] text-[#2c3e50]
+                hover:bg-[#f5f1eb] transition-colors cursor-pointer
+              "
+            >
+              📋 Prompt & Log
+            </button>
+          </div>
+        )}
 
         {/* Action bar */}
         {isApproved ? (
@@ -476,86 +500,15 @@ export default function IntakeDetailPage() {
             </div>
           </div>
         ) : (
-          /* Pending — show feedback + actions */
-          <div className="flex items-start gap-5 py-5 border-t border-[#e8e2d8]">
-            {/* Feedback for AI */}
-            <div className="flex-1 bg-[#faf7f2] p-5 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-[16px] font-semibold text-[#1a4d2e]">
-                  💬 Feedback for AI
-                </div>
-                <button
-                  onClick={() => setAiSheetOpen(true)}
-                  className="
-                    px-3 py-1.5 rounded-[6px] text-[13px] font-semibold
-                    bg-white border border-[#e8e2d8] text-[#2c3e50]
-                    hover:bg-[#f5f1eb] transition-colors cursor-pointer
-                  "
-                >
-                  View AI Prompt &amp; Log
-                </button>
-              </div>
-              <p className="text-[13px] text-[#7f8c8d] mb-3.5">
-                Help improve the AI by sharing what could be better
-              </p>
-              <div className="mb-3">
-                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
-                  Feedback Type:
-                </label>
-                <select
-                  value={feedbackType}
-                  onChange={(e) => setFeedbackType(e.target.value)}
-                  className="
-                    w-full px-3 py-2.5 border border-[#e8e2d8] rounded-[6px]
-                    text-[13px] bg-white
-                  "
-                >
-                  <option value="">Select type...</option>
-                  <option value="risk_stratification">
-                    Risk Stratification
-                  </option>
-                  <option value="medication_guidance">
-                    Medication Guidance
-                  </option>
-                </select>
-              </div>
-              <div className="mb-3.5">
-                <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
-                  What should the AI do differently?
-                </label>
-                <textarea
-                  value={feedbackText}
-                  onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="e.g., 'Should have flagged SSRI interaction' or 'Too conservative on benzodiazepines'"
-                  className="
-                    w-full min-h-[80px] px-3 py-2.5 border border-[#e8e2d8] rounded-[6px]
-                    text-[13px] resize-y
-                  "
-                />
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSubmitFeedback}
-                  disabled={submitFeedback.isPending}
-                  className="
-                    px-4 py-2 rounded-[6px] text-[13px] font-semibold                    bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
-                    hover:bg-[#1a4d2e] hover:text-white transition-all
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                >
-                  {submitFeedback.isPending ? "Saving..." : "📝 Submit Feedback"}
-                </button>
-              </div>
-            </div>
-
-            {/* Right column: approve + test email */}
+          /* Pending — approve + test email */
+          <div className="flex items-start justify-end gap-5 py-5 border-t border-[#e8e2d8]">
             <div className="flex flex-col items-end gap-3 shrink-0 min-w-[300px]">
               <button
                 onClick={() => setApproveOpen(true)}
                 className="
                   px-5 py-2.5 rounded-[6px] text-[14px] font-semibold
                   bg-[#1a4d2e] text-white
-                  hover:bg-[#2d7a4a] transition-colors
+                  hover:bg-[#2d7a4a] transition-colors cursor-pointer
                 "
               >
                 ✅ Approve & Send
@@ -587,13 +540,15 @@ export default function IntakeDetailPage() {
                     onChange={(e) => setTestEmail(e.target.value)}
                     className="
                       flex-1 px-2.5 py-2 border border-[#e8e2d8] rounded-[6px]
-                      text-[13px]                    "
+                      text-[13px]
+                    "
                   />
                   <button
                     onClick={() => testEmailMutation.mutate()}
                     disabled={testEmailMutation.isPending || !testEmail}
                     className="
-                      px-3 py-2 rounded-[6px] text-[13px] font-semibold                      bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
+                      px-3 py-2 rounded-[6px] text-[13px] font-semibold
+                      bg-transparent border-2 border-[#1a4d2e] text-[#1a4d2e]
                       hover:bg-[#1a4d2e] hover:text-white transition-all
                       disabled:opacity-50 disabled:cursor-not-allowed
                       whitespace-nowrap
@@ -691,6 +646,71 @@ export default function IntakeDetailPage() {
               className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a]"
             >
               {regenerateAi.isPending ? "Generating..." : "Regenerate"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Feedback dialog */}
+      <Dialog open={feedbackOpen} onOpenChange={(open) => {
+        setFeedbackOpen(open);
+        if (!open) { setFeedbackType(""); setFeedbackText(""); }
+      }}>
+        <DialogContent className="!max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1a4d2e]">
+              Leave Feedback for AI
+            </DialogTitle>
+            <DialogDescription className="text-[14px]">
+              Help improve the AI by sharing what could be better.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <div>
+              <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
+                Feedback Type
+              </label>
+              <select
+                value={feedbackType}
+                onChange={(e) => setFeedbackType(e.target.value)}
+                className="
+                  w-full px-3 py-2.5 border border-[#e8e2d8] rounded-[6px]
+                  text-[13px] bg-white
+                "
+              >
+                <option value="">Select type...</option>
+                <option value="risk_stratification">Risk Stratification</option>
+                <option value="medication_guidance">Medication Guidance</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
+                What should the AI do differently?
+              </label>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="e.g., 'Should have flagged SSRI interaction' or 'Too conservative on benzodiazepines'"
+                className="
+                  w-full min-h-[90px] px-3 py-2.5 border border-[#e8e2d8] rounded-[6px]
+                  text-[13px] resize-y bg-white
+                "
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                handleSubmitFeedback();
+                // Close on success via the mutation's onSuccess
+              }}
+              disabled={submitFeedback.isPending}
+              className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a]"
+            >
+              {submitFeedback.isPending ? "Saving..." : "Submit Feedback"}
             </Button>
           </DialogFooter>
         </DialogContent>
