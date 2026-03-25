@@ -94,14 +94,7 @@ export default function IntakesPage() {
 
   const sorted = sortByPrep1(intakes);
   const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
-  // Completed always sorted by date submitted (newest first) like original
-  const reviewed = sorted
-    .filter((i) => i.status !== "pending" && i.status !== "sending")
-    .sort(
-      (a, b) =>
-        new Date(b.submitted_at || "").getTime() -
-        new Date(a.submitted_at || "").getTime(),
-    );
+  const reviewed = sorted.filter((i) => i.status !== "pending" && i.status !== "sending");
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
