@@ -123,6 +123,7 @@ export interface AiResult {
 
 export async function generateAiOutput(
   clientData: Record<string, unknown>,
+  additionalGuidance?: string,
 ): Promise<{ result: AiResult | null; error: string | null }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { result: null, error: "No Anthropic API key found" };
@@ -136,13 +137,17 @@ export async function generateAiOutput(
       day: "numeric",
     });
 
+    const guidanceBlock = additionalGuidance?.trim()
+      ? `\n\nADDITIONAL REVIEWER GUIDANCE (apply these specific instructions for this client):\n${additionalGuidance.trim()}`
+      : "";
+
     const message = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4096,
       messages: [
         {
           role: "user",
-          content: `${TRACY_PROMPT}\n\nToday's date: ${today}\n\nHere is the client's health intake data:\n\n${clientSummary}\n\nPlease generate both outputs now.`,
+          content: `${TRACY_PROMPT}\n\nToday's date: ${today}\n\nHere is the client's health intake data:\n\n${clientSummary}${guidanceBlock}\n\nPlease generate both outputs now.`,
         },
       ],
     });

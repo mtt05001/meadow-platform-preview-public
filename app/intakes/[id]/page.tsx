@@ -17,16 +17,6 @@ import {
 } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -68,6 +58,7 @@ export default function IntakeDetailPage() {
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [regenerateGuidance, setRegenerateGuidance] = useState("");
   const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [riskSaveStatus, setRiskSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
   const [emailSaveStatus, setEmailSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
@@ -237,15 +228,17 @@ export default function IntakeDetailPage() {
   });
 
   const regenerateAi = useMutation({
-    mutationFn: () =>
+    mutationFn: (guidance?: string) =>
       apiFetch<{ success: boolean }>(`/api/intakes/${id}/regenerate-ai`, {
         method: "POST",
+        body: guidance?.trim() ? { guidance } : {},
       }),
     onSuccess: () => {
       toast.success("AI output regenerated");
       editorsInitialized.current = false; // Allow re-init from new AI data
       queryClient.invalidateQueries({ queryKey: ["intake", id] });
       setRegenerateOpen(false);
+      setRegenerateGuidance("");
     },
     onError: (e) => {
       toast.error("Regeneration failed: " + e.message);
@@ -655,29 +648,53 @@ export default function IntakeDetailPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Regenerate AI confirmation */}
-      <AlertDialog open={regenerateOpen} onOpenChange={setRegenerateOpen}>
-        <AlertDialogContent size="sm">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Regenerate AI Output</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will call the AI to generate a new risk stratification and
-              medication guidance email for this intake. Any existing AI output
-              will be overwritten.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+      {/* Regenerate AI dialog */}
+      <Dialog open={regenerateOpen} onOpenChange={(open) => {
+        setRegenerateOpen(open);
+        if (!open) setRegenerateGuidance("");
+      }}>
+        <DialogContent className="!max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="text-[#1a4d2e]">
+              Regenerate AI Output
+            </DialogTitle>
+            <DialogDescription className="text-[14px]">
+              This will generate a new risk stratification and medication
+              guidance email. Any existing AI output will be overwritten.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <label className="text-[13px] font-medium text-[#2c3e50] block mb-1.5">
+              Additional guidance for the AI
+              <span className="text-[#7f8c8d] font-normal"> (optional)</span>
+            </label>
+            <textarea
+              value={regenerateGuidance}
+              onChange={(e) => setRegenerateGuidance(e.target.value)}
+              placeholder="e.g., 'Be less conservative about the SSRI tapering' or 'Flag the MAOI interaction more prominently'"
+              className="
+                w-full min-h-[90px] px-3 py-2.5 border border-[#e8e2d8] rounded-[6px]
+                text-[13px] resize-y bg-white
+              "
+            />
+            <p className="text-[12px] text-[#7f8c8d] mt-1.5">
+              Leave empty to regenerate with the default prompt.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRegenerateOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => regenerateAi.mutate(regenerateGuidance || undefined)}
               disabled={regenerateAi.isPending}
               className="bg-[#1a4d2e] text-white hover:bg-[#2d7a4a]"
-              onClick={() => regenerateAi.mutate()}
             >
               {regenerateAi.isPending ? "Generating..." : "Regenerate"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* AI Prompt & Feedback Sheet */}
       <AiSheet open={aiSheetOpen} onOpenChange={setAiSheetOpen} />
