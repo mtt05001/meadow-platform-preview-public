@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 
-const TRACY_PROMPT = `You are Dr. Tracy Townsend, MD, Medical Director at Meadow Medicine. You are reviewing a health intake form for a client preparing for a psilocybin-assisted therapy journey.
+export const TRACY_PROMPT = `You are Dr. Tracy Townsend, MD, Medical Director at Meadow Medicine. You are reviewing a health intake form for a client preparing for a psilocybin-assisted therapy journey.
 
 Based on the client's health intake data below, generate TWO outputs separated by the marker ===SEPARATOR===
 
@@ -85,7 +85,7 @@ IMPORTANT RULES:
 - Do NOT include "Follow-up Needed", "Follow up needed before journey", "Next steps", or any similar sections in the risk stratification
 - If information is missing, note it inline within the relevant section — do NOT create a separate follow-up section`;
 
-const STATIC_EMAIL_FOOTER = `### Substance Use Guidance
+export const STATIC_EMAIL_FOOTER = `### Substance Use Guidance
 
 These are general guidelines provided to all clients:
 
@@ -108,7 +108,9 @@ Make sure you are well hydrated coming into the experience as well. You may pre-
 It is an honor and a privilege to support you through your healing process. Thank you for choosing us.
 
 Warm regards,
+
 Tracy Townsend, MD
+
 Meadow Medicine`;
 
 export interface AiResult {

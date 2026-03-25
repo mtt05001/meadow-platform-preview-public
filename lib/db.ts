@@ -259,3 +259,22 @@ export async function getFeedbackByIntake(intakeId: string): Promise<AiFeedback[
     created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
   }));
 }
+
+export async function getAllFeedback(): Promise<(AiFeedback & { client_name: string })[]> {
+  const { rows } = await pool().query(
+    `SELECT f.id, f.intake_id, f.feedback_type, f.feedback_text, f.reviewer, f.created_at,
+            i.name AS client_name
+     FROM ai_feedback f
+     LEFT JOIN intakes i ON f.intake_id = i.id
+     ORDER BY f.created_at DESC`,
+  );
+  return rows.map((r) => ({
+    id: r.id as number,
+    intake_id: r.intake_id as string,
+    feedback_type: r.feedback_type as string,
+    feedback_text: r.feedback_text as string,
+    reviewer: r.reviewer as string,
+    created_at: r.created_at instanceof Date ? r.created_at.toISOString() : String(r.created_at),
+    client_name: (r.client_name as string) || "Unknown",
+  }));
+}
