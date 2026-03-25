@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
@@ -60,20 +60,27 @@ export default function IntakeDetailPage() {
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [riskSaveStatus, setRiskSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
+  const [emailSaveStatus, setEmailSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
+
+  // Track whether editors have been initialized from server data
+  const editorsInitialized = useRef(false);
 
   const { data: intake, isLoading } = useQuery({
     queryKey: ["intake", id],
     queryFn: () => apiFetch<Intake>(`/api/intakes/${id}`),
   });
 
+  // Only initialize editor content once from server data (not on every refetch)
   useEffect(() => {
-    if (!intake) return;
+    if (!intake || editorsInitialized.current) return;
     const ai = intake.ai_output as {
       risk_stratification?: string;
       email?: string;
     } | null;
     setRiskHtml(toHtml(intake.edited_risk_strat || ai?.risk_stratification || ""));
     setEmailHtml(toHtml(ai?.email || ""));
+    editorsInitialized.current = true;
   }, [intake]);
 
   const isApproved =
@@ -104,6 +111,58 @@ export default function IntakeDetailPage() {
     },
     onError: (e) => toast.error("Save failed: " + e.message),
   });
+
+  // Debounced autosave — saves 3s after last edit, per editor
+  const riskSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const emailSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const riskHtmlRef = useRef(riskHtml);
+  const emailHtmlRef = useRef(emailHtml);
+  riskHtmlRef.current = riskHtml;
+  emailHtmlRef.current = emailHtml;
+
+  const handleRiskChange = useCallback((html: string) => {
+    setRiskHtml(html);
+    setRiskSaveStatus("unsaved");
+    if (riskSaveTimer.current) clearTimeout(riskSaveTimer.current);
+    riskSaveTimer.current = setTimeout(async () => {
+      setRiskSaveStatus("saving");
+      try {
+        await apiFetch(`/api/intakes/${id}/save-risk-strat`, {
+          method: "POST",
+          body: { risk_stratification: riskHtmlRef.current },
+        });
+        setRiskSaveStatus("saved");
+      } catch {
+        setRiskSaveStatus("unsaved");
+      }
+    }, 3000);
+  }, [id]);
+
+  const handleEmailChange = useCallback((html: string) => {
+    setEmailHtml(html);
+    setEmailSaveStatus("unsaved");
+    if (emailSaveTimer.current) clearTimeout(emailSaveTimer.current);
+    emailSaveTimer.current = setTimeout(async () => {
+      setEmailSaveStatus("saving");
+      try {
+        await apiFetch(`/api/intakes/${id}/save-email-draft`, {
+          method: "POST",
+          body: { email: emailHtmlRef.current },
+        });
+        setEmailSaveStatus("saved");
+      } catch {
+        setEmailSaveStatus("unsaved");
+      }
+    }, 3000);
+  }, [id]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      if (riskSaveTimer.current) clearTimeout(riskSaveTimer.current);
+      if (emailSaveTimer.current) clearTimeout(emailSaveTimer.current);
+    };
+  }, []);
 
   const approveMutation = useMutation({
     mutationFn: async () => {
@@ -175,6 +234,7 @@ export default function IntakeDetailPage() {
       }),
     onSuccess: () => {
       toast.success("AI output regenerated");
+      editorsInitialized.current = false; // Allow re-init from new AI data
       queryClient.invalidateQueries({ queryKey: ["intake", id] });
       setRegenerateOpen(false);
     },
@@ -304,7 +364,7 @@ export default function IntakeDetailPage() {
 
         {/* Regenerate AI link + Two-column editor grid */}
         {!isApproved && (
-          <div className="flex justify-end mb-2">
+          <div className="flex items-center justify-end mb-2">
             <button
               onClick={() => setRegenerateOpen(true)}
               disabled={regenerateAi.isPending}
@@ -322,58 +382,34 @@ export default function IntakeDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
           {/* Risk Stratification */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-            <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold">
-              📋 Risk Stratification
+            <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold flex items-center justify-between">
+              <span>📋 Risk Stratification</span>
+              <SaveIndicator status={riskSaveStatus} />
             </div>
             <div className="p-5">
               <div className="border border-[#e8e2d8] rounded-[6px] bg-white overflow-hidden">
                 <QuillEditor
                   value={riskHtml}
-                  onChange={setRiskHtml}
+                  onChange={handleRiskChange}
                   placeholder="Risk stratification notes..."
                 />
-              </div>
-              <div className="flex items-center gap-2.5 mt-2">
-                <button
-                  onClick={() => saveRiskStrat.mutate()}
-                  disabled={saveRiskStrat.isPending}
-                  className="
-                    px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                    bg-[#1a4d2e] text-white
-                    hover:opacity-85 transition-opacity
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                >
-                  {saveRiskStrat.isPending ? "Saving..." : "💾 Save Changes"}
-                </button>
               </div>
             </div>
           </div>
 
           {/* Email Editor */}
           <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] overflow-hidden">
-            <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold">
-              📧 Medication Guidance Email
+            <div className="bg-[#1a4d2e] text-white px-5 py-3 text-[15px] font-semibold flex items-center justify-between">
+              <span>📧 Medication Guidance Email</span>
+              <SaveIndicator status={emailSaveStatus} />
             </div>
             <div className="p-5">
               <div className="border border-[#e8e2d8] rounded-[6px] bg-white overflow-hidden">
                 <QuillEditor
                   value={emailHtml}
-                  onChange={setEmailHtml}
+                  onChange={handleEmailChange}
                   placeholder="Medication guidance email..."
                 />
-              </div>
-              <div className="flex items-center gap-2.5 mt-2">
-                <button
-                  onClick={() => saveEmailDraft.mutate()}
-                  disabled={saveEmailDraft.isPending}
-                  className="
-                    px-[18px] py-[7px] rounded-[6px] text-[13px] font-semibold                    bg-[#1a4d2e] text-white
-                    hover:opacity-85 transition-opacity
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                >
-                  {saveEmailDraft.isPending ? "Saving..." : "💾 Save Changes"}
-                </button>
               </div>
             </div>
           </div>
@@ -659,5 +695,37 @@ export default function IntakeDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function SaveIndicator({ status }: { status: "idle" | "unsaved" | "saving" | "saved" }) {
+  if (status === "idle") return null;
+
+  return (
+    <span className="flex items-center gap-1.5 text-[12px] font-normal">
+      {status === "unsaved" && (
+        <>
+          <span className="w-2 h-2 rounded-full bg-yellow-400" />
+          <span className="text-white/70">Unsaved changes</span>
+        </>
+      )}
+      {status === "saving" && (
+        <>
+          <svg className="w-3.5 h-3.5 animate-spin text-white/70" viewBox="0 0 16 16" fill="none">
+            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+            <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span className="text-white/70">Saving...</span>
+        </>
+      )}
+      {status === "saved" && (
+        <>
+          <svg className="w-3.5 h-3.5 text-emerald-300" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8.5l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="text-white/90">Saved</span>
+        </>
+      )}
+    </span>
   );
 }
