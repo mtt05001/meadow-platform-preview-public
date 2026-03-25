@@ -72,7 +72,7 @@ export async function getIntakes(
 ): Promise<Intake[]> {
   let q = `SELECT ${SELECT_COLS} FROM intakes`;
   const params: unknown[] = [];
-  const where: string[] = [];
+  const where: string[] = ["status != 'deleted'"];
   if (statusFilter) {
     where.push(`status = $${params.length + 1}`);
     params.push(statusFilter);
@@ -190,7 +190,7 @@ export async function claimIntakeForSending(
 }
 
 export async function deleteIntake(id: string): Promise<void> {
-  await pool().query("DELETE FROM intakes WHERE id = $1", [id]);
+  await pool().query("UPDATE intakes SET status = 'deleted', updated_at = NOW() WHERE id = $1", [id]);
 }
 
 export async function getLastUpdated(): Promise<string> {

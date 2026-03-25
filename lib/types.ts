@@ -15,7 +15,7 @@ export interface Intake {
   email: string;
   submitted_at: string | null;
   risk_tier: "red" | "yellow" | "green" | "unknown";
-  status: "pending" | "sending" | "approved" | "rejected" | "archived";
+  status: "pending" | "sending" | "approved" | "rejected" | "archived" | "deleted";
   hard_contraindications: HardContraindication[];
   soft_score: number;
   soft_details: string[];
