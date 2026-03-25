@@ -81,3 +81,37 @@ export interface ClientCache {
   last_synced: string;
   total: number;
 }
+
+// GHL Calendar API types
+
+export interface GHLCalendarTeamMember {
+  userId: string;
+  priority?: number;
+  isPrimary?: boolean;
+}
+
+export interface GHLCalendar {
+  id: string;
+  locationId: string;
+  name: string;
+  calendarType: string;
+  slug?: string;
+  widgetSlug: string;
+  widgetType?: string;
+  isActive: boolean;
+  groupId?: string;
+  description?: string;
+  eventTitle?: string;
+  slotDuration: number;
+  slotDurationUnit?: string;
+  teamMembers: GHLCalendarTeamMember[];
+}
+
+export interface GHLCalendarGroup {
+  id: string;
+  locationId?: string;
+  name: string;
+  description?: string;
+  slug: string;
+  isActive: boolean;
+}

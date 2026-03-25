@@ -256,6 +256,29 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Calendar API uses a different version than the rest of GHL
+const GHL_CALENDAR_VERSION = "2021-04-15";
+
+/** Fetch all calendars in the location. */
+export async function fetchCalendars(): Promise<
+  import("./types").GHLCalendar[]
+> {
+  const data = (await ghlFetch(`/calendars/?locationId=${LOCATION_ID}`, {
+    headers: { Version: GHL_CALENDAR_VERSION },
+  })) as { calendars?: import("./types").GHLCalendar[] };
+  return data.calendars || [];
+}
+
+/** Fetch all calendar groups in the location. */
+export async function fetchCalendarGroups(): Promise<
+  import("./types").GHLCalendarGroup[]
+> {
+  const data = (await ghlFetch(`/calendars/groups?locationId=${LOCATION_ID}`, {
+    headers: { Version: GHL_CALENDAR_VERSION },
+  })) as { groups?: import("./types").GHLCalendarGroup[] };
+  return data.groups || [];
+}
+
 export async function triggerWebhook(
   payload: Record<string, unknown>,
 ): Promise<{ ok: boolean; error: string | null }> {

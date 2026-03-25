@@ -8,6 +8,8 @@ const isPublicRoute = createRouteMatcher([
   "/intakes/:id/readonly",
   "/api/intakes/:id/readonly",
   "/api/intakes/:id/pdf",
+  "/schedule",
+  "/api/schedule",
 ]);
 
 // Routes accessible to facilitators (and admins)
