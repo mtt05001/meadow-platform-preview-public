@@ -6,8 +6,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import { marked } from "marked";
-import type { Intake } from "@/lib/types";
+import type { Intake, AiFeedback } from "@/lib/types";
 import Nav from "@/components/nav";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,6 +68,7 @@ export default function IntakeDetailPage() {
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [aiSheetOpen, setAiSheetOpen] = useState(false);
   const [riskSaveStatus, setRiskSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
   const [emailSaveStatus, setEmailSaveStatus] = useState<"idle" | "unsaved" | "saving" | "saved">("idle");
 
@@ -478,8 +487,20 @@ export default function IntakeDetailPage() {
           <div className="flex items-start gap-5 py-5 border-t border-[#e8e2d8]">
             {/* Feedback for AI */}
             <div className="flex-1 bg-[#faf7f2] p-5 rounded-lg">
-              <div className="text-[16px] font-semibold text-[#1a4d2e] mb-2">
-                💬 Feedback for AI
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[16px] font-semibold text-[#1a4d2e]">
+                  💬 Feedback for AI
+                </div>
+                <button
+                  onClick={() => setAiSheetOpen(true)}
+                  className="
+                    px-3 py-1.5 rounded-[6px] text-[13px] font-semibold
+                    bg-white border border-[#e8e2d8] text-[#2c3e50]
+                    hover:bg-[#f5f1eb] transition-colors cursor-pointer
+                  "
+                >
+                  View AI Prompt &amp; Log
+                </button>
               </div>
               <p className="text-[13px] text-[#7f8c8d] mb-3.5">
                 Help improve the AI by sharing what could be better
@@ -658,6 +679,9 @@ export default function IntakeDetailPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* AI Prompt & Feedback Sheet */}
+      <AiSheet open={aiSheetOpen} onOpenChange={setAiSheetOpen} />
+
       {/* PDF Viewer Modal */}
       {pdfOpen && (
         <div
@@ -695,6 +719,142 @@ export default function IntakeDetailPage() {
         </div>
       )}
     </div>
+  );
+}
+
+type FeedbackRow = AiFeedback & { client_name: string };
+
+function AiSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const [promptExpanded, setPromptExpanded] = useState(false);
+
+  const { data: promptData } = useQuery({
+    queryKey: ["admin-ai-prompt"],
+    queryFn: () =>
+      apiFetch<{ prompt: string; static_email_footer: string }>("/api/admin/ai-prompt"),
+    enabled: open,
+  });
+
+  const { data: feedback } = useQuery({
+    queryKey: ["admin-ai-feedback"],
+    queryFn: () => apiFetch<FeedbackRow[]>("/api/admin/ai-feedback"),
+    enabled: open,
+  });
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="right" className="!w-[520px] !max-w-[90vw] overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle className="text-[#1a4d2e]">AI Configuration</SheetTitle>
+          <SheetDescription>
+            Current prompt and reviewer feedback log
+          </SheetDescription>
+        </SheetHeader>
+
+        <div className="px-4 pb-6 space-y-6">
+          {/* Prompt viewer */}
+          <div>
+            <button
+              onClick={() => setPromptExpanded(!promptExpanded)}
+              className="
+                w-full flex items-center justify-between py-2.5
+                text-left bg-transparent border-none cursor-pointer
+              "
+            >
+              <span className="text-[14px] font-semibold text-[#2c3e50]">
+                System Prompt
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                className={`text-[#7f8c8d] transition-transform ${promptExpanded ? "rotate-180" : ""}`}
+              >
+                <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            {promptExpanded && promptData && (
+              <div className="space-y-4 mt-1">
+                <pre className="text-[11px] leading-relaxed text-[#2c3e50] whitespace-pre-wrap font-mono bg-[#f9f7f4] rounded-lg p-3 max-h-[400px] overflow-y-auto border border-[#e8e2d8]">
+                  {promptData.prompt}
+                </pre>
+                <div>
+                  <p className="text-[11px] font-semibold text-[#5a6c7d] mb-1.5 uppercase tracking-wide">
+                    Static Email Footer
+                  </p>
+                  <pre className="text-[11px] leading-relaxed text-[#2c3e50] whitespace-pre-wrap font-mono bg-[#f9f7f4] rounded-lg p-3 max-h-[250px] overflow-y-auto border border-[#e8e2d8]">
+                    {promptData.static_email_footer}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Feedback log */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[14px] font-semibold text-[#2c3e50]">
+                Feedback Log
+              </span>
+              {feedback && feedback.length > 0 && (
+                <Badge variant="secondary" className="text-[11px]">
+                  {feedback.length}
+                </Badge>
+              )}
+            </div>
+
+            {!feedback?.length ? (
+              <p className="text-[13px] text-[#7f8c8d] italic">
+                No feedback submitted yet.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {feedback.map((row) => (
+                  <div
+                    key={row.id}
+                    className="bg-[#f9f7f4] rounded-lg p-3 border border-[#e8e2d8]"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${
+                          row.feedback_type === "medication_guidance"
+                            ? "border-blue-200 text-blue-700 bg-blue-50"
+                            : "border-amber-200 text-amber-700 bg-amber-50"
+                        }`}
+                      >
+                        {row.feedback_type === "medication_guidance"
+                          ? "Email"
+                          : row.feedback_type === "risk_stratification"
+                            ? "Risk Strat"
+                            : row.feedback_type}
+                      </Badge>
+                      <span className="text-[11px] text-[#7f8c8d]">
+                        {row.client_name}
+                      </span>
+                    </div>
+                    <p className="text-[12px] text-[#2c3e50] leading-relaxed">
+                      {row.feedback_text}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-[#7f8c8d]">
+                      <span>{row.reviewer}</span>
+                      <span>&middot;</span>
+                      <span>
+                        {new Date(row.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
