@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake } from "@/lib/types";
@@ -79,18 +79,18 @@ export default function IntakesPage() {
     onError: (e) => toast.error("Sync failed: " + e.message),
   });
 
-  const syncGhl = useMutation({
-    mutationFn: () =>
-      apiFetch<{ success: boolean; message?: string }>(
-        "/api/intakes/sync-ghl",
-        { method: "POST" },
-      ),
-    onSuccess: (res) => {
-      toast.success(res.message || "GHL sync complete");
-      queryClient.invalidateQueries({ queryKey: ["intakes"] });
-    },
-    onError: (e) => toast.error("GHL sync failed: " + e.message),
-  });
+  // Auto-sync GHL data on page load
+  const didAutoSync = useRef(false);
+  const [ghlSyncing, setGhlSyncing] = useState(false);
+  useEffect(() => {
+    if (didAutoSync.current) return;
+    didAutoSync.current = true;
+    setGhlSyncing(true);
+    apiFetch("/api/intakes/sync-ghl", { method: "POST" })
+      .then(() => queryClient.invalidateQueries({ queryKey: ["intakes"] }))
+      .catch(() => {})
+      .finally(() => setGhlSyncing(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sorted = sortByPrep1(intakes);
   const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
@@ -115,12 +115,17 @@ export default function IntakesPage() {
             <h2 className="text-[24px] font-semibold text-[#1a4d2e]">
               Review Queue
             </h2>
-            {lastUpdated && (
+            {ghlSyncing ? (
+              <div className="flex items-center gap-1.5 text-[12px] text-[#7f8c8d]">
+                <Spinner />
+                <span>Syncing GHL…</span>
+              </div>
+            ) : lastUpdated ? (
               <div className="flex items-center gap-1.5 text-[12px] text-[#7f8c8d]">
                 <span className="w-1.5 h-1.5 bg-[#2ecc71] rounded-full animate-pulse" />
                 <span>Updated {formatTimestamp(lastUpdated)}</span>
               </div>
-            )}
+            ) : null}
           </div>
           <div className="flex-1" />
           <div className="flex items-center gap-2">
@@ -140,21 +145,6 @@ export default function IntakesPage() {
               "
             />
             <div className="w-px h-6 bg-[#e0d9ce]" />
-            <button
-              onClick={() => syncGhl.mutate()}
-              disabled={syncGhl.isPending}
-              title="Pull latest dates, facilitators, and statuses from GoHighLevel"
-              className="
-                px-3 py-2 rounded-[6px] text-[13px] font-medium
-                bg-white border border-[#e0d9ce] text-[#2c3e50]
-                hover:bg-[#f5f1eb] transition-colors
-                disabled:opacity-50 disabled:cursor-not-allowed
-                flex items-center gap-1.5
-              "
-            >
-              {syncGhl.isPending ? <Spinner /> : <SyncIcon />}
-              Sync GHL
-            </button>
             <button
               onClick={() => syncJotform.mutate()}
               disabled={syncJotform.isPending}
@@ -260,17 +250,6 @@ function Spinner() {
     <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 16 16" fill="none">
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" opacity="0.3" />
       <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SyncIcon() {
-  return (
-    <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2.5 8a5.5 5.5 0 0 1 9.3-4" />
-      <path d="M13.5 8a5.5 5.5 0 0 1-9.3 4" />
-      <path d="M11.5 2v2.5H14" />
-      <path d="M4.5 14v-2.5H2" />
     </svg>
   );
 }
