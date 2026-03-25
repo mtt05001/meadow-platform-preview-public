@@ -32,35 +32,7 @@ Based on your health intake, below is your personalized guidance regarding medic
 - If a supplement is safe to continue, simply say "Safe to continue"
 - Note any that should be held before the journey
 
-### Substance Use Guidance
-
-COPY THIS SECTION VERBATIM — DO NOT CHANGE ANY WORDING:
-
-These are general guidelines provided to all clients:
-
-- **Cannabis**: Please hold all cannabis use for 7 days prior to your journey and 6 weeks after to allow for optimal integration. Cannabis is held before and after the journey because it can blunt emotional processing beforehand. Sensitivity to cannabis increases significantly after a psychedelic experience, and can produce psychedelic effects.
-
-- **Alcohol**: Please hold alcohol for 7 days prior and 6 weeks after your journey. Alcohol is held before and after the journey because it can interfere with emotional clarity, sleep quality, and nervous system regulation.
-
-- **Caffeine**: Please taper your caffeine intake to no more than 1 cup per day. You may have 1 cup on the morning of your journey if needed to avoid withdrawal headaches.
-
-- **Nicotine/Vaping**: Nicotine is generally permitted. You are encouraged to taper down use prior to the journey, and to avoid acute overuse.
-
-### Day-of-Journey Notes
-
-COPY THIS SECTION VERBATIM — DO NOT CHANGE ANY WORDING:
-
-Take only medications explicitly approved above. If there are any changes to your medications, supplements, or substance use, please let us know.
-
-In the morning, you can choose to either fast or have a light breakfast with protein, whatever is going to help your stomach feel most at ease. Finish your breakfast at least 1 hour prior to your arrival at the center.
-
-Make sure you are well hydrated coming into the experience as well. You may pre-hydrate the morning of your journey with ginger tea. Your facilitator can provide this to you the day prior at your preparation session.
-
-It is an honor and a privilege to support you through your healing process. Thank you for choosing us.
-
-Warm regards,
-Tracy Townsend,
-Meadow Medicine
+Do NOT include any substance use guidance, day-of-journey notes, or sign-off (closing, signature, etc.) — these will be appended automatically. End your output after the Supplement Guidance section.
 
 ## RISK STRATIFICATION
 
@@ -111,6 +83,32 @@ IMPORTANT RULES:
 - NEVER use the phrase "client cleared" anywhere in either output
 - Do NOT include "Follow up needed before journey" or "Next steps" sections
 - If you don't have enough information about something, note it as needing follow-up`;
+
+const STATIC_EMAIL_FOOTER = `### Substance Use Guidance
+
+These are general guidelines provided to all clients:
+
+**Cannabis**: Please hold all cannabis use for 7 days prior to your journey and 6 weeks after to allow for optimal integration. Cannabis is held before and after the journey because it can blunt emotional processing beforehand. Sensitivity to cannabis increases significantly after a psychedelic experience, and can produce psychedelic effects.
+
+**Alcohol**: Please hold alcohol for 7 days prior and 6 weeks after your journey. Alcohol is held before and after the journey because it can interfere with emotional clarity, sleep quality, and nervous system regulation.
+
+**Caffeine**: Please taper your caffeine intake to no more than 1 cup per day. You may have 1 cup on the morning of your journey as needed to avoid withdrawal headaches.
+
+**Nicotine/Vaping**: Nicotine is generally permitted. Clients are encouraged to taper down as tolerated, and to avoid acute overuse.
+
+### Day-of-Journey Notes
+
+Take only medications explicitly approved above. If there are any changes to your medications, supplements, or substance use, please let us know.
+
+In the morning, you can choose to either fast or have a light breakfast with protein, whatever is going to help your stomach feel most at ease. Finish your breakfast at least 1 hour prior to your arrival at the center.
+
+Make sure you are well hydrated coming into the experience as well. You may pre-hydrate the morning of your journey with ginger tea. Your facilitator can provide this to you the day prior at your preparation session.
+
+It is an honor and a privilege to support you through your healing process. Thank you for choosing us.
+
+Warm regards,
+Tracy Townsend, MD
+Meadow Medicine`;
 
 export interface AiResult {
   email: string;
@@ -186,6 +184,9 @@ export async function generateAiOutput(
     if (dearIdx > 0) {
       emailText = emailText.slice(dearIdx);
     }
+
+    // Append static substance use guidance, day-of-journey notes, and sign-off
+    emailText = emailText.trimEnd() + "\n\n" + STATIC_EMAIL_FOOTER;
 
     return {
       result: {
