@@ -20,13 +20,13 @@ import { toast } from "sonner";
 
 const PAGE_SIZE = 50;
 
-/** Sort by prep 1 date, latest to earliest. No prep1 goes to the end. */
+/** Sort by prep 1 date, earliest to latest. No prep1 goes to the end. */
 function sortByPrep1(intakes: Intake[]): Intake[] {
   return [...intakes].sort((a, b) => {
     if (!a.prep1_date && !b.prep1_date) return 0;
     if (!a.prep1_date) return 1;
     if (!b.prep1_date) return -1;
-    return new Date(b.prep1_date).getTime() - new Date(a.prep1_date).getTime();
+    return new Date(a.prep1_date).getTime() - new Date(b.prep1_date).getTime();
   });
 }
 
