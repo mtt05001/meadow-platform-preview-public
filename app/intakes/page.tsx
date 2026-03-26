@@ -122,7 +122,7 @@ export default function IntakesPage() {
     needsReview.map((i) => i.email?.toLowerCase()).filter(Boolean),
   );
   const onboarding = (clientData?.clients ?? [])
-    .filter((c) => c.hi_status === "Sent" && !pendingEmails.has(c.email?.toLowerCase()))
+    .filter((c) => c.hi_status === "Sent" && c.stage_name !== "Refunded" && !pendingEmails.has(c.email?.toLowerCase()))
     .sort((a, b) => {
       if (!a.prep1 && !b.prep1) return 0;
       if (!a.prep1) return 1;
