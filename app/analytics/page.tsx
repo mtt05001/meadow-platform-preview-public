@@ -70,6 +70,7 @@ function formatDate(iso: string) {
       weekday: "short",
       month: "short",
       day: "numeric",
+      timeZone: "UTC",
     });
   } catch {
     return iso;
@@ -77,7 +78,9 @@ function formatDate(iso: string) {
 }
 
 function daysFromNow(iso: string) {
-  const diff = Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const now = new Date();
+  const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diff = Math.ceil((new Date(iso).getTime() - todayUTC) / (1000 * 60 * 60 * 24));
   if (diff === 0) return "Today";
   if (diff === 1) return "Tomorrow";
   return `In ${diff} days`;
@@ -389,10 +392,10 @@ function UpcomingSessions({
         >
           <div className="flex flex-col items-center w-12 shrink-0">
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-              {new Date(s.date).toLocaleDateString("en-US", { weekday: "short" })}
+              {new Date(s.date).toLocaleDateString("en-US", { weekday: "short", timeZone: "UTC" })}
             </span>
             <span className="text-[18px] font-bold text-foreground leading-tight tabular-nums">
-              {new Date(s.date).getDate()}
+              {new Date(s.date).getUTCDate()}
             </span>
           </div>
           <div className="flex-1 min-w-0">

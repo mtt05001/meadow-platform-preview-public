@@ -34,25 +34,29 @@ function formatDate(dateStr: string | null): string {
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: "UTC",
     });
   } catch {
     return dateStr;
   }
 }
 
+/** Get today's date as a UTC-midnight timestamp for comparing against date-only strings. */
+function utcToday(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
 function isOverdue(prep1Date: string | null): boolean {
   if (!prep1Date) return false;
   const d = new Date(prep1Date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return d < today;
+  return d < utcToday();
 }
 
 function isDueSoon(prep1Date: string | null): boolean {
   if (!prep1Date) return false;
   const d = new Date(prep1Date);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = utcToday();
   const inThreeDays = new Date(today);
   inThreeDays.setDate(inThreeDays.getDate() + 3);
   return d >= today && d <= inThreeDays;
