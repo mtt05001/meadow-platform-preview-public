@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { getIntakes, updateIntakeFields } from "@/lib/db";
-import { searchContact, getOpportunityWithFacilitator, fetchOpportunityDetails, GHL_FIELDS, cfVal } from "@/lib/ghl";
+import { getClientCache, getIntakes, updateIntakeFields } from "@/lib/db";
+import { searchContact, getOpportunityWithFacilitator, fetchOpportunityDetails, GHL_FIELDS, GhlRateLimitError, cfVal, parseHiStatus } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 import { auth } from "@clerk/nextjs/server";
+
+const CACHE_TTL_MS = 60_000; // 1 minute
 
 function fmtDate(d: string | null): string | null {
   if (!d) return null;
@@ -15,16 +17,38 @@ function fmtDate(d: string | null): string | null {
   return d.slice(0, 10);
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function POST() {
   await auth.protect();
   try {
+    // Skip if GHL was synced recently (prevents duplicate syncs across browsers)
+    const cache = await getClientCache();
+    if (cache?.last_synced) {
+      const age = Date.now() - new Date(cache.last_synced).getTime();
+      if (age < CACHE_TTL_MS) {
+        return NextResponse.json({
+          success: true,
+          updated: 0,
+          total: 0,
+          breakdown: { updated: 0, no_contact: 0, no_opportunity: 0, no_fields: 0, failed: 0 },
+          errors: [],
+          message: `GHL synced recently (${Math.round(age / 1000)}s ago), skipped`,
+        });
+      }
+    }
+
     const intakes = await getIntakes(500);
     const toSync = intakes.filter(
       (i) => i.email && (i.status as string) !== "deleted",
     );
 
-    const BATCH_SIZE = 10;
+    const BATCH_SIZE = 3;
+    const BATCH_DELAY_MS = 1500;
     const errors: string[] = [];
+    let rateLimited = false;
     const totals = { updated: 0, no_contact: 0, no_opportunity: 0, no_fields: 0, failed: 0 };
     const totalBatches = Math.ceil(toSync.length / BATCH_SIZE);
 
@@ -52,10 +76,12 @@ export async function POST() {
 
           const prep1 = fmtDate(cfVal(cfs, GHL_FIELDS.PREP1_DATE));
           const facilitator = cfVal(cfs, GHL_FIELDS.LEAD_FACILITATOR) || null;
+          const hiStatus = parseHiStatus(cfVal(cfs, GHL_FIELDS.HI_STATUS));
 
           const fields: Record<string, string | null> = {};
           if (prep1) fields.prep1_date = prep1;
           if (facilitator) fields.facilitator = facilitator;
+          if (hiStatus) fields.ghl_hi_status = hiStatus;
 
           if (Object.keys(fields).length) {
             await updateIntakeFields(intake.id, fields);
@@ -73,6 +99,7 @@ export async function POST() {
         } else {
           bc.failed++;
           totals.failed++;
+          if (r.reason instanceof GhlRateLimitError) rateLimited = true;
           errors.push(String(r.reason).slice(0, 80));
         }
       }
@@ -82,6 +109,30 @@ export async function POST() {
           `${bc.updated} updated, ${bc.no_contact} no contact, ` +
           `${bc.no_opportunity} no opp, ${bc.no_fields} no fields, ` +
           `${bc.failed} failed`,
+      );
+
+      if (rateLimited) {
+        console.log(`[sync-ghl] Aborting: GHL rate limit hit after retries`);
+        break;
+      }
+
+      // Delay between batches to stay under burst limit
+      if (i + BATCH_SIZE < toSync.length) {
+        await sleep(BATCH_DELAY_MS);
+      }
+    }
+
+    if (rateLimited) {
+      return NextResponse.json(
+        {
+          success: false,
+          updated: totals.updated,
+          total: toSync.length,
+          breakdown: totals,
+          errors: errors.slice(0, 10),
+          message: `GHL rate limit hit — only ${totals.updated}/${toSync.length} synced. Try again shortly.`,
+        },
+        { status: 429 },
       );
     }
 

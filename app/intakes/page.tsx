@@ -95,19 +95,18 @@ export default function IntakesPage() {
     queryFn: () => apiFetch<ClientCache>("/api/clients"),
   });
 
-  // Auto-sync GHL data + client cache on page load
+  // Auto-sync GHL data + client cache on page load (also updates intake records)
   const didAutoSync = useRef(false);
   const [ghlSyncing, setGhlSyncing] = useState(false);
   useEffect(() => {
     if (didAutoSync.current) return;
     didAutoSync.current = true;
     setGhlSyncing(true);
-    Promise.all([
-      apiFetch("/api/intakes/sync-ghl", { method: "POST" })
-        .then(() => queryClient.invalidateQueries({ queryKey: ["intakes"] })),
-      apiFetch("/api/clients/sync", { method: "POST" })
-        .then(() => queryClient.invalidateQueries({ queryKey: ["clients"] })),
-    ])
+    apiFetch("/api/clients/sync", { method: "POST" })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["clients"] });
+        queryClient.invalidateQueries({ queryKey: ["intakes"] });
+      })
       .catch(() => {})
       .finally(() => setGhlSyncing(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps

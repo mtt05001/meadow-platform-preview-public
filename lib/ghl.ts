@@ -66,9 +66,19 @@ function getToken(): string {
   return token;
 }
 
+export class GhlRateLimitError extends Error {
+  constructor(public retryAfter: number) {
+    super(`GHL API 429: rate limited, retry after ${retryAfter}s`);
+    this.name = "GhlRateLimitError";
+  }
+}
+
+const MAX_RETRIES = 3;
+
 async function ghlFetch(
   path: string,
   options: RequestInit = {},
+  retries = MAX_RETRIES,
 ): Promise<unknown> {
   const token = getToken();
   const res = await fetch(`${GHL_BASE}${path}`, {
@@ -81,6 +91,15 @@ async function ghlFetch(
       ...options.headers,
     },
   });
+  if (res.status === 429) {
+    const retryAfter = Number(res.headers.get("Retry-After")) || 2 ** (MAX_RETRIES - retries + 1);
+    if (retries > 0) {
+      console.log(`[GHL] Rate limited on ${path}, retrying in ${retryAfter}s (${retries} retries left)`);
+      await sleep(retryAfter * 1000);
+      return ghlFetch(path, options, retries - 1);
+    }
+    throw new GhlRateLimitError(retryAfter);
+  }
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`GHL API ${res.status}: ${body}`);
@@ -192,12 +211,26 @@ export async function updateOpportunity(
   }
 }
 
+export type SearchOppCustomField = {
+  id: string;
+  fieldValue?: string;
+  fieldValueString?: string;
+  value?: string;
+};
+
+export type SearchOpp = {
+  id: string;
+  contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string };
+  pipelineStageId: string;
+  updatedAt?: string;
+  customFields?: SearchOppCustomField[];
+};
+
 /** Paginated search for all opportunities in a pipeline. */
 export async function searchPipelineOpportunities(
   pipelineId: string,
-): Promise<{ id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string }[]> {
-  type Opp = { id: string; contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string }; pipelineStageId: string };
-  const allOpps: Opp[] = [];
+): Promise<SearchOpp[]> {
+  const allOpps: SearchOpp[] = [];
   let page = 1;
   while (true) {
     const params = new URLSearchParams({
@@ -207,7 +240,7 @@ export async function searchPipelineOpportunities(
       page: String(page),
     });
     const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
-      opportunities?: Opp[];
+      opportunities?: SearchOpp[];
     };
     const opps = data.opportunities || [];
     if (!opps.length) break;
