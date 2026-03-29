@@ -17,6 +17,7 @@ const navLinks: NavLink[] = [
   { href: "/mission-control", label: "Mission Control", minRole: "admin" },
   { href: "/analytics", label: "Analytics", minRole: "admin" },
   { href: "/schedule", label: "Schedule" },
+  { href: "/screening", label: "Screening" },
   { href: "/admin", label: "Admin", minRole: "admin" },
 ];
 
