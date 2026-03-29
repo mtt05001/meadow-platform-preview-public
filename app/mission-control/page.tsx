@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { useClientSync } from "@/lib/use-client-sync";
 import type { McData, McEvent } from "@/lib/mission-control-types";
 import Nav from "@/components/nav";
 
@@ -148,6 +149,9 @@ function StatCard({
 }
 
 export default function MissionControlPage() {
+  // Auto-sync GHL data on mount (shared hook — 1-min TTL guard prevents redundant syncs)
+  const { sync, isSyncing } = useClientSync();
+
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["mission-control"],
     queryFn: () => apiFetch<McData>("/api/mission-control/refresh"),
@@ -174,9 +178,9 @@ export default function MissionControlPage() {
           )}
           <div className="ml-auto">
             <button
-              onClick={() => refetch()}
-              disabled={isFetching}
-              title="Reload the 7-day forecast from GoHighLevel calendar data"
+              onClick={() => sync()}
+              disabled={isFetching || isSyncing}
+              title="Sync GHL data and reload the 7-day forecast"
               className="
                 px-3 py-2 rounded-[6px] text-[13px] font-medium
                 bg-white border border-[#e0d9ce] text-[#2c3e50]
@@ -185,7 +189,7 @@ export default function MissionControlPage() {
                 flex items-center gap-1.5
               "
             >
-              {isFetching ? "Refreshing..." : "Refresh"}
+              {isFetching || isSyncing ? "Refreshing..." : "Refresh"}
             </button>
           </div>
         </div>

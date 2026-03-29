@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { useClientSync } from "@/lib/use-client-sync";
 import type { Intake, Client, ClientCache } from "@/lib/types";
 
 function useDebouncedValue(value: string, ms = 300) {
@@ -95,21 +96,8 @@ export default function IntakesPage() {
     queryFn: () => apiFetch<ClientCache>("/api/clients"),
   });
 
-  // Auto-sync GHL data + client cache on page load (also updates intake records)
-  const didAutoSync = useRef(false);
-  const [ghlSyncing, setGhlSyncing] = useState(false);
-  useEffect(() => {
-    if (didAutoSync.current) return;
-    didAutoSync.current = true;
-    setGhlSyncing(true);
-    apiFetch("/api/clients/sync", { method: "POST" })
-      .then(() => {
-        queryClient.invalidateQueries({ queryKey: ["clients"] });
-        queryClient.invalidateQueries({ queryKey: ["intakes"] });
-      })
-      .catch(() => {})
-      .finally(() => setGhlSyncing(false));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Auto-sync GHL data on mount (shared hook — 1-min TTL guard prevents redundant syncs)
+  const { isSyncing: ghlSyncing } = useClientSync();
 
   const sorted = sortByPrep1(intakes);
   const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
+import { useClientSync } from "@/lib/use-client-sync";
 import type { Client, ClientCache } from "@/lib/types";
 import ClientDrawer from "@/components/client-drawer";
 import Nav from "@/components/nav";
@@ -99,25 +100,13 @@ export default function ClientsPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
-  const queryClient = useQueryClient();
-
   const { data, isLoading } = useQuery({
     queryKey: ["clients"],
     queryFn: () => apiFetch<ClientCache>("/api/clients"),
   });
 
-  const syncMutation = useMutation({
-    mutationFn: () =>
-      apiFetch<{ success: boolean; message?: string }>(
-        "/api/clients/sync",
-        { method: "POST" },
-      ),
-    onSuccess: (res) => {
-      toast.success(res.message || "Client sync complete");
-      queryClient.invalidateQueries({ queryKey: ["clients"] });
-    },
-    onError: (e) => toast.error("Sync failed: " + e.message),
-  });
+  // Auto-sync on mount + manual refresh (shared hook — 1-min TTL guard prevents redundant syncs)
+  const { sync, isSyncing } = useClientSync();
 
   const clients = data?.clients ?? [];
   const lastSynced = data?.last_synced ?? null;
@@ -231,8 +220,8 @@ export default function ClientsPage() {
             </div>
             <div className="w-px h-6 bg-[#e0d9ce]" />
             <button
-              onClick={() => syncMutation.mutate()}
-              disabled={syncMutation.isPending}
+              onClick={() => sync()}
+              disabled={isSyncing}
               title="Pull latest client data, pipeline stages, and dates from GoHighLevel"
               className="
                 px-3 py-2 rounded-[6px] text-[13px] font-medium
@@ -242,7 +231,7 @@ export default function ClientsPage() {
                 flex items-center gap-1.5
               "
             >
-              {syncMutation.isPending ? <Spinner /> : <SyncIcon />}
+              {isSyncing ? <Spinner /> : <SyncIcon />}
               Sync GHL
             </button>
           </div>

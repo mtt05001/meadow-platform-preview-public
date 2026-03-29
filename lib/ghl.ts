@@ -75,7 +75,7 @@ export class GhlRateLimitError extends Error {
 
 const MAX_RETRIES = 3;
 
-async function ghlFetch(
+export async function ghlFetch(
   path: string,
   options: RequestInit = {},
   retries = MAX_RETRIES,
