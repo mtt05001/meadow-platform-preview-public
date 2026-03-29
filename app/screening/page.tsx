@@ -11,7 +11,6 @@ import {
   Search,
   X,
   Pill,
-  ShieldCheck,
   ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -119,7 +118,7 @@ function MedPicker({
   return (
     <div className="relative">
       <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-foreground/30" />
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-[18px] w-[18px] text-foreground/45" />
         <input
           ref={inputRef}
           type="text"
@@ -148,10 +147,10 @@ function MedPicker({
             }
             if (e.key === "Escape") setOpen(false);
           }}
-          className="w-full pl-12 pr-10 py-3 bg-cream-warm border border-foreground/8 rounded-lg focus:border-meadow focus:ring-1 focus:ring-meadow/20 transition-colors outline-none text-foreground placeholder:text-foreground/30 text-sm"
+          className="w-full pl-12 pr-10 py-3 bg-cream-warm border border-foreground/8 rounded-lg focus:border-meadow focus:ring-1 focus:ring-meadow/20 transition-colors outline-none text-foreground placeholder:text-foreground/45 text-sm"
         />
         <ChevronDown
-          className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/25 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </div>
 
@@ -244,7 +243,7 @@ function SectionHeader({ title, label }: { title: string; label: string }) {
   return (
     <div className="flex items-baseline justify-between border-b border-foreground/8 pb-1.5">
       <h2 className="font-serif text-xl text-meadow">{title}</h2>
-      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/30 hidden sm:block">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/50 hidden sm:block">
         {label}
       </span>
     </div>
@@ -424,7 +423,7 @@ export default function ScreeningPage() {
           <h1 className="font-serif text-3xl md:text-4xl text-meadow tracking-tight leading-tight mb-1">
             Medication Screening
           </h1>
-          <p className="text-foreground/50 max-w-xl text-sm">
+          <p className="text-foreground/70 max-w-xl text-sm">
             Evaluate patient eligibility based on current prescriptions and
             lifestyle factors.
           </p>
@@ -546,12 +545,12 @@ export default function ScreeningPage() {
             ) : (
               <div className="bg-cream-warm/60 rounded-xl py-12 flex flex-col items-center text-center">
                 <div className="w-11 h-11 rounded-full bg-cream-dark/40 flex items-center justify-center mb-2.5">
-                  <Pill className="h-5 w-5 text-foreground/20" />
+                  <Pill className="h-5 w-5 text-foreground/35" />
                 </div>
-                <p className="text-foreground/60 font-medium text-sm">
+                <p className="text-foreground/70 font-medium text-sm">
                   Search and add medications above
                 </p>
-                <p className="text-foreground/30 text-xs mt-0.5">
+                <p className="text-foreground/50 text-xs mt-0.5">
                   No contraindications detected yet
                 </p>
               </div>
@@ -657,7 +656,7 @@ export default function ScreeningPage() {
           <section className="space-y-3">
             <SectionHeader title="Client Age" label="Biometric Factor" />
             <div className="flex items-start gap-6">
-              <p className="text-foreground/40 text-sm leading-relaxed max-w-xs hidden md:block">
+              <p className="text-foreground/60 text-sm leading-relaxed max-w-xs hidden md:block">
                 Age is a critical biometric marker for metabolic clearance rates
                 of specific compounds.
               </p>
@@ -671,7 +670,7 @@ export default function ScreeningPage() {
                   max={120}
                   className="w-20 bg-cream-warm border border-foreground/8 rounded-lg py-2.5 px-3 text-2xl font-serif text-foreground text-center outline-none focus:border-meadow focus:ring-1 focus:ring-meadow/20 transition-colors placeholder:text-foreground/15 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/30 leading-tight">
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-foreground/50 leading-tight">
                   Years
                   <br />
                   Old
@@ -693,12 +692,7 @@ export default function ScreeningPage() {
 
         {/* Footer */}
         <footer className="mt-6 pt-5 border-t border-foreground/8 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-foreground/25">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em]">
-              HIPAA Compliant Session
-            </span>
-          </div>
+          <div />
           <div className="flex items-center gap-3">
             {medications.length > 0 && !allFreqsSet && (
               <p className="text-xs text-tier-yellow italic mr-2">

@@ -4,21 +4,32 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
 import type { UserRole } from "@/lib/auth";
+import {
+  ClipboardList,
+  Users,
+  Gauge,
+  BarChart3,
+  CalendarDays,
+  ShieldCheck,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 
 interface NavLink {
   href: string;
   label: string;
+  icon: LucideIcon;
   minRole?: UserRole; // omit = everyone can see
 }
 
 const navLinks: NavLink[] = [
-  { href: "/intakes", label: "Intakes", minRole: "admin" },
-  { href: "/clients", label: "Clients" },
-  { href: "/mission-control", label: "Mission Control", minRole: "admin" },
-  { href: "/analytics", label: "Analytics", minRole: "admin" },
-  { href: "/schedule", label: "Schedule" },
-  { href: "/screening", label: "Screening" },
-  { href: "/admin", label: "Admin", minRole: "admin" },
+  { href: "/intakes", label: "Intakes", icon: ClipboardList, minRole: "admin" },
+  { href: "/clients", label: "Clients", icon: Users },
+  { href: "/mission-control", label: "Mission Control", icon: Gauge, minRole: "admin" },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, minRole: "admin" },
+  { href: "/schedule", label: "Schedule", icon: CalendarDays },
+  { href: "/screening", label: "Screening", icon: ShieldCheck },
+  { href: "/admin", label: "Admin", icon: Settings, minRole: "admin" },
 ];
 
 export default function Nav({
@@ -53,24 +64,27 @@ export default function Nav({
           </div>
         </Link>
 
-        <div className="flex items-center gap-4">
-          {visibleLinks.map(({ href, label }) => {
+        <div className="flex items-center gap-1">
+          {visibleLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname.startsWith(href);
             return (
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium no-underline transition-all ${
+                className={`px-3 py-1.5 rounded-md text-sm font-medium no-underline transition-all flex items-center gap-1.5 ${
                   active
                     ? "bg-white/15 text-white"
                     : "text-white/65 hover:text-white hover:bg-white/10"
                 }`}
               >
+                <Icon className="h-3.5 w-3.5" />
                 {label}
               </Link>
             );
           })}
-          <UserButton />
+          <div className="ml-3">
+            <UserButton />
+          </div>
         </div>
       </div>
     </nav>
