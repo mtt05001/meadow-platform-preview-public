@@ -86,8 +86,8 @@ function EventRow({ ev }: { ev: McEvent }) {
         {ev.time}
       </div>
       <div className="flex flex-col gap-1">
-        <div className="font-semibold text-base text-bark">{ev.name}</div>
-        <div className="text-sm text-bark flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
+          <span className="font-semibold text-base text-bark">{ev.name}</span>
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${badgeClass(ev.type)}`}
           >
@@ -96,7 +96,7 @@ function EventRow({ ev }: { ev: McEvent }) {
           {ev.facilitator && (
             <>
               <span className="text-bark-light/40">·</span>
-              <span className="text-bark-light">{ev.facilitator}</span>
+              <span className="text-sm text-bark-light">{ev.facilitator}</span>
             </>
           )}
         </div>

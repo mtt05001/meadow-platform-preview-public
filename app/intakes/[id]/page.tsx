@@ -53,8 +53,6 @@ export default function IntakeDetailPage() {
   const [approveOpen, setApproveOpen] = useState(false);
   const [approverName, setApproverName] = useState("");
   const [testEmail, setTestEmail] = useState("");
-  const [pdfOpen, setPdfOpen] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(true);
   const [feedbackType, setFeedbackType] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [regenerateOpen, setRegenerateOpen] = useState(false);
@@ -320,33 +318,64 @@ export default function IntakeDetailPage() {
           ← Back to Queue
         </a>
 
-        {/* Client header — matches original format */}
-        <div
-          className="text-[24px] font-bold text-[#1a4d2e] mb-3"
-          id="detail-client-name"
-        >
-          {clientName}
-          {headerInfo && (
-            <span className="text-[#2c3e50]"> — {headerInfo}</span>
-          )}
-          {jfId && (
-            <>
-              <button
-                onClick={() => { setPdfLoading(true); setPdfOpen(true); }}
-                className="text-[14px] font-normal text-[#2d7a4a] underline ml-3 hover:text-[#1a4d2e] bg-transparent border-none"
-              >
-                📄 View Original Intake
-              </button>
-              <a
-                href={`https://www.jotform.com/inbox/${jfFormId}/${jfId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[14px] font-normal text-[#2d7a4a] underline ml-3 hover:text-[#1a4d2e] no-underline"
-              >
-                📋 Jotform Inbox
-              </a>
-            </>
-          )}
+        {/* Patient chart header */}
+        <div className="bg-white rounded-[10px] shadow-[0_2px_8px_rgba(0,0,0,0.08)] mb-5 overflow-hidden">
+          <div className="px-5 py-4 flex items-start justify-between gap-4">
+            {/* Left: client info */}
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <div className="flex items-center gap-3 flex-wrap" id="detail-client-name">
+                <h1 className="text-[22px] font-bold text-[#1a4d2e] leading-tight">{clientName}</h1>
+                {headerInfo && (
+                  <span className="text-[14px] font-semibold text-[#2c3e50] bg-[#f5f1eb] px-2.5 py-0.5 rounded-full">{headerInfo}</span>
+                )}
+              </div>
+              {intake.facilitator && (
+                <div className="flex items-center gap-2 text-[16px]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2d7a4a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span className="text-[#5a6c7d]">Lead Facilitator</span>
+                  <span className="font-semibold text-[#1a4d2e]">{intake.facilitator}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Right: utility links */}
+            {jfId && (
+              <div className="flex items-center gap-1.5 shrink-0 pt-1">
+                <a
+                  href={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium
+                    text-[#2c3e50] bg-[#f5f1eb] hover:bg-[#ebe5db] transition-colors
+                  "
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                  Original Intake
+                </a>
+                <a
+                  href={`https://www.jotform.com/inbox/${jfFormId}/${jfId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium
+                    text-[#2c3e50] bg-[#f5f1eb] hover:bg-[#ebe5db] transition-colors
+                  "
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  Jotform
+                </a>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Hard contraindications */}
@@ -719,42 +748,6 @@ export default function IntakeDetailPage() {
       {/* AI Prompt & Feedback Sheet */}
       <AiSheet open={aiSheetOpen} onOpenChange={setAiSheetOpen} />
 
-      {/* PDF Viewer Modal */}
-      {pdfOpen && (
-        <div
-          className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center"
-          onClick={() => setPdfOpen(false)}
-        >
-          <div
-            className="bg-white rounded-[10px] w-[90vw] h-[90vh] flex flex-col overflow-hidden shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between px-4 py-3 bg-[#1a4d2e] text-white">
-              <span className="font-semibold text-[15px]">
-                📄 Original Health Intake
-              </span>
-              <button
-                onClick={() => setPdfOpen(false)}
-                className="bg-transparent border-none text-white text-[22px] cursor-pointer leading-none"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="flex-1 relative">
-              {pdfLoading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white">
-                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#1a4d2e] border-t-transparent" />
-                </div>
-              )}
-              <iframe
-                src={`/api/intakes/${jfId}/pdf?form_id=${jfFormId}`}
-                className="h-full border-none w-full"
-                onLoad={() => setPdfLoading(false)}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
