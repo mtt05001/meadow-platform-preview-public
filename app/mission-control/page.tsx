@@ -79,7 +79,6 @@ function computeFacilitatorLoad(data: McData): [string, number][] {
 }
 
 function EventRow({ ev }: { ev: McEvent }) {
-  const showReadiness = !["Consult", "Other", "Taper"].includes(ev.type);
   return (
     <div className="grid grid-cols-[90px_1fr_110px] items-center px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
       <div className="text-sm font-semibold text-bark tabular-nums">
@@ -100,8 +99,7 @@ function EventRow({ ev }: { ev: McEvent }) {
             </>
           )}
         </div>
-        {showReadiness && (
-          <div className="flex gap-2 mt-0.5">
+        <div className="flex gap-2 mt-0.5">
             <span
               className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[pillClass(ev.hi)]}`}
             >
@@ -113,7 +111,6 @@ function EventRow({ ev }: { ev: McEvent }) {
               OHA: {ev.oha}
             </span>
           </div>
-        )}
       </div>
       <div className="flex items-center justify-end gap-2">
         <span className={`text-xs font-semibold whitespace-nowrap ${(STATUS_LABEL[ev.status] || STATUS_LABEL.pipeline).color}`}>
