@@ -11,7 +11,7 @@ Meadow Medicine is a physician-led psilocybin therapy practice in Portland, Oreg
 ## Tech stack
 
 - **Framework:** Next.js 16 (App Router)
-- **Auth:** Clerk
+- **Auth:** Clerk (with role-based access via `publicMetadata`)
 - **Styling:** Tailwind CSS v4
 - **UI components:** shadcn/ui
 - **Database:** Postgres (Supabase) via `pg` Pool
@@ -31,8 +31,10 @@ Meadow Medicine is a physician-led psilocybin therapy practice in Portland, Oreg
 app/
 ├── api/                          # API routes
 │   ├── intakes/                  # CRUD, sync, approve, PDF, email
+│   ├── admin/users/              # User management (list, invite, role change)
 │   ├── facilitator/              # Facilitator client list
 │   └── test-email/               # Email testing endpoint
+├── admin/page.tsx                # Admin user management (invite, roles)
 ├── intakes/                      # Pages
 │   ├── page.tsx                  # Queue (needs review + completed)
 │   └── [id]/
@@ -49,6 +51,7 @@ components/
 ├── risk-tier-badge.tsx           # Green/yellow/red badge
 └── ui/                           # shadcn/ui primitives
 lib/
+├── auth.ts                       # Role helpers (getUserRole, isAdmin, getRoleFromClaims)
 ├── api-client.ts                 # Client-side apiFetch + ApiError
 ├── api-utils.ts                  # Server-side getErrorMessage + apiError
 ├── db.ts                         # Postgres CRUD (parameterized queries)
@@ -59,8 +62,27 @@ lib/
 ├── jotform.ts                    # Jotform submission fetcher
 ├── types.ts                      # TypeScript types
 └── utils.ts                      # cn() helper
-proxy.ts                          # Clerk auth middleware
+proxy.ts                          # Clerk auth middleware (role-based route protection)
+types/globals.d.ts                # Session claims type (role in publicMetadata)
+scripts/migrate-clerk-users.ts    # Dev→prod Clerk user migration
 ```
+
+## Roles & access control
+
+Auth uses Clerk `publicMetadata.role` exposed via session claims. Enforced in `proxy.ts` middleware.
+
+| Role | Default | Access |
+|---|---|---|
+| `admin` | No | Everything — intakes, clients, mission control, admin page, all API routes |
+| `facilitator` | No | `/clients`, `/api/clients`, `/api/facilitator` only |
+| `client` | **Yes** (no metadata = client) | Nothing — placeholder for future client portal |
+
+- Roles are set in Clerk user `publicMetadata`: `{ "role": "admin" }`
+- Session token must be customized in Clerk Dashboard: `{ "metadata": "{{user.public_metadata}}" }`
+- Role helpers live in `lib/auth.ts` — `getUserRole()`, `isAdmin()`, `getRoleFromClaims()`
+- Nav links filter by role (see `components/nav.tsx`)
+- Admin page (`/admin`) allows inviting users and changing roles via Clerk Backend API
+- Public routes (readonly intake, PDF, webhook, sign-in) bypass role checks
 
 ## The risk engine
 
@@ -125,6 +147,60 @@ vercel
   - **Invalidation:** After mutations, call `queryClient.invalidateQueries({ queryKey: [...] })`
   - **Query keys:** `['intakes']` for list, `['intake', id]` for detail
 - **No manual loading booleans** — use `isLoading` / `isPending` from React Query hooks
+
+## Production safety — READ THIS
+
+**All environments (including Vercel preview deployments) are connected to production GHL, production database, and production Gmail.** There is no staging environment. This means any code that runs on a preview deployment can modify real patient data or send real emails.
+
+### Dangerous files (require review by Gonza before merging)
+
+| File | Risk |
+|---|---|
+| `lib/ghl.ts` — `addNote()`, `updateOpportunity()`, `triggerWebhook()` | Writes to production GHL (notes, opportunity fields, webhooks) |
+| `lib/db.ts` — `upsertIntake()`, `updateIntakeFields()`, `claimIntakeForSending()`, `deleteIntake()`, `upsertClientCache()`, `insertFeedback()` | Writes to / deletes from the production database |
+| `lib/gmail.ts` — `sendEmail()` | Sends real emails to real patients |
+| `app/api/intakes/[id]/approve/route.ts` | Full approve flow: DB + GHL webhook + email |
+| `app/api/intakes/[id]/resend-email/route.ts` | Sends email to patients |
+| `app/api/intakes/[id]/actions/route.ts` | Archive/delete intakes |
+| `app/api/test-email/route.ts` | Sends test emails |
+| `proxy.ts` | Auth middleware — breaking this could lock everyone out or expose data |
+
+### Rules for Claude Code
+
+- **Never** modify the dangerous files listed above without explicitly confirming with the user that they understand the production implications.
+- **Never** add new API routes that perform POST/PUT/DELETE to GHL, the database, or Gmail without flagging the risk.
+- **Never** modify or delete environment variable references — these are production secrets.
+- When in doubt about whether a change could affect production data, **stop and ask**.
+- Prefer UI-only changes (components, pages, styles) which are always safe.
+
+### Safe areas (no production risk)
+
+- UI components (`components/`)
+- Page layouts and styling (`app/**/page.tsx`, `globals.css`)
+- Read-only display logic
+- Types (`lib/types.ts`)
+- Utility functions (`lib/utils.ts`)
+- Tailwind config, `package.json` (dependency additions)
+
+### Contributor workflow
+
+All changes go through pull requests — never push directly to `main`.
+
+```bash
+# Start a new change
+git checkout main && git pull
+git checkout -b your-name/description
+
+# After making changes
+git add <files>
+git commit -m "What you changed"
+git push -u origin your-name/description
+
+# Open a PR (Claude Code can do this for you)
+gh pr create --title "What you changed" --body "Description"
+```
+
+Vercel will create a preview deployment for every PR. Use the preview URL to test. Gonza reviews and merges.
 
 ## GHL API gotchas
 
