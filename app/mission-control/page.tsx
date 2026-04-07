@@ -46,6 +46,15 @@ const STATUS_LABEL: Record<string, { text: string; color: string }> = {
   pipeline: { text: "Pipeline", color: "text-gray-400" },
 };
 
+function formatJourneyDate(value: string): string {
+  if (!value) return "None";
+  // Expected YYYY-MM-DD; parse as local date to avoid TZ shifts
+  const [y, m, d] = value.slice(0, 10).split("-").map(Number);
+  if (!y || !m || !d) return value;
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
 function formatTimestamp(iso: string): string {
   try {
     return (
@@ -99,7 +108,7 @@ function EventRow({ ev }: { ev: McEvent }) {
             </>
           )}
         </div>
-        <div className="flex gap-2 mt-0.5">
+        <div className="flex gap-2 mt-0.5 flex-wrap">
             <span
               className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[pillClass(ev.hi)]}`}
             >
@@ -109,6 +118,11 @@ function EventRow({ ev }: { ev: McEvent }) {
               className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[pillClass(ev.oha)]}`}
             >
               OHA: {ev.oha}
+            </span>
+            <span
+              className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${ev.journey ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}
+            >
+              Journey: {formatJourneyDate(ev.journey)}
             </span>
           </div>
       </div>

@@ -4,6 +4,7 @@ export interface McEvent {
   type: string;
   name: string;
   facilitator: string | null;
+  journey: string;
   hi: string;
   oha: string;
   status: "green" | "yellow" | "red";

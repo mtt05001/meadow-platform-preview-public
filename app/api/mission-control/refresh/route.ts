@@ -243,6 +243,7 @@ export async function GET() {
         type: label,
         name,
         facilitator: info.fac,
+        journey: info.journey,
         hi: info.hi,
         oha: info.oha,
         status,
