@@ -340,7 +340,8 @@ export async function GET() {
       }
 
       // Status: Prep 1 only needs HI; Prep 2+ and In-Person variants need both
-      const hiOk = ["Signed", "Reviewed"].includes(info.hi);
+      // HI must be Reviewed to count as ready — Signed alone is not enough
+      const hiOk = info.hi === "Reviewed";
       const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
       const isPrep1 = label === "Prep 1";
       const isHigherPrep = /^Prep \d+$/.test(label) && !isPrep1;
