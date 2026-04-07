@@ -72,10 +72,20 @@ export async function GET() {
   try {
     // 1. Load enrichment data from Postgres client cache (synced by /api/clients/sync)
     const clientCache = await getClientCache();
+    // When a contact has multiple opportunities, prefer the one with the most
+    // journey-related data populated. Otherwise the Map would silently overwrite
+    // with whichever opp comes last, which can pick a stale/wrong record.
     const contactIndex = new Map<string, ContactInfo>();
+    const score = (i: ContactInfo) =>
+      [i.journey, i.prep1, i.prep2, i.integ1, i.integ2].filter(Boolean).length;
     if (clientCache) {
       for (const c of clientCache.clients) {
-        if (c.contact_id) contactIndex.set(c.contact_id, clientToInfo(c));
+        if (!c.contact_id) continue;
+        const info = clientToInfo(c);
+        const existing = contactIndex.get(c.contact_id);
+        if (!existing || score(info) > score(existing)) {
+          contactIndex.set(c.contact_id, info);
+        }
       }
     }
 
