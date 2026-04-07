@@ -426,22 +426,6 @@ export default function IntakeDetailPage() {
         </div>
 
         {/* Hard contraindications */}
-        {intake.hard_contraindications.length > 0 && (
-          <div className="bg-[#fdeaea] border-2 border-[#c0392b] rounded-lg px-4 py-4 mb-5">
-            <h3 className="font-bold text-[#c0392b] text-[14px] mb-2">
-              Hard Contraindications Found
-            </h3>
-            <ul className="list-disc ml-5 space-y-1">
-              {intake.hard_contraindications.map((c, i) => (
-                <li key={i} className="text-[#c0392b] text-[14px]">
-                  <strong className="capitalize">{c.category}:</strong>{" "}
-                  {c.detail}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
         {/* Two-column editor grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-4">
           {/* Risk Stratification */}
