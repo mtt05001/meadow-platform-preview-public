@@ -335,6 +335,9 @@ export async function GET() {
         label = labelChronological(ev, calType, buckets);
       } else if (calType === "Room") {
         label = labelRoomHybrid(ev, buckets, info.journey, eventDate);
+      } else if (calType === "Taper") {
+        // Taper calendar groups many appointment types — show the actual title
+        label = (ev.title || "").split("|")[0]?.trim() || "Taper";
       } else {
         label = calType;
       }
@@ -349,7 +352,7 @@ export async function GET() {
       let status: "green" | "red";
       if (isPrep1) {
         status = hiOk ? "green" : "red";
-      } else if (label === "Taper") {
+      } else if (calType === "Taper") {
         status = "green";
       } else {
         status = hiOk && ohaOk ? "green" : "red";
