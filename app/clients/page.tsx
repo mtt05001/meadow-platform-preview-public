@@ -24,7 +24,8 @@ type SortKey =
   | "hi_status"
   | "chart_status"
   | "prep1"
-  | "journey";
+  | "journey"
+  | "won_date";
 type SortDir = "asc" | "desc";
 type StageGroup = "all" | "onboarding" | "prep" | "journey" | "integration" | "done";
 type HiFilter = "all" | "Reviewed" | "Signed" | "Sent" | "None";
@@ -37,9 +38,11 @@ function sortClients(
   const sorted = [...clients];
   const m = dir === "asc" ? 1 : -1;
   sorted.sort((a, b) => {
+    // Always group by stage first
+    if (a.stage_order !== b.stage_order) return a.stage_order - b.stage_order;
     switch (key) {
       case "stage_order":
-        return (a.stage_order - b.stage_order) * m;
+        return 0;
       case "name":
         return a.name.localeCompare(b.name) * m;
       case "email":
@@ -52,6 +55,12 @@ function sortClients(
         return ((a.prep1 || "9999") > (b.prep1 || "9999") ? 1 : -1) * m;
       case "journey":
         return ((a.journey || "9999") > (b.journey || "9999") ? 1 : -1) * m;
+      case "won_date":
+        // Empty won_date sorts last regardless of direction
+        if (!a.won_date && !b.won_date) return 0;
+        if (!a.won_date) return 1;
+        if (!b.won_date) return -1;
+        return (a.won_date > b.won_date ? 1 : -1) * m;
       default:
         return 0;
     }
@@ -96,8 +105,8 @@ export default function ClientsPage() {
   const [search, setSearch] = useState("");
   const [stageGroup, setStageGroup] = useState<StageGroup>("all");
   const [hiFilter, setHiFilter] = useState<HiFilter>("all");
-  const [sortKey, setSortKey] = useState<SortKey>("stage_order");
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortKey, setSortKey] = useState<SortKey>("won_date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
   const { data, isLoading } = useQuery({
@@ -269,6 +278,11 @@ export default function ClientsPage() {
                       Stage <SortIcon col="stage_order" />
                     </button>
                   </TableHead>
+                  <TableHead className="text-center">
+                    <button onClick={() => toggleSort("won_date")} className="flex items-center justify-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
+                      Won <SortIcon col="won_date" />
+                    </button>
+                  </TableHead>
                   <TableHead>
                     <button onClick={() => toggleSort("email")} className="flex items-center text-xs font-semibold uppercase tracking-wide hover:text-[#1a4d2e]">
                       Email <SortIcon col="email" />
@@ -328,6 +342,9 @@ export default function ClientsPage() {
                       >
                         {client.stage_name}
                       </span>
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-[#5a6c7d]">
+                      {fmtShortDate(client.won_date)}
                     </TableCell>
                     <TableCell className="text-sm text-[#5a6c7d] max-w-[180px] truncate">
                       {client.email}

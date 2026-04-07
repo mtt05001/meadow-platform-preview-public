@@ -74,6 +74,7 @@ export interface Client {
   approved_by: string;
   approved_at: string;
   intake_url: string;
+  won_date: string;
 }
 
 export interface ClientCache {

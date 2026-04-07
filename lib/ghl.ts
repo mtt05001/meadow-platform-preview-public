@@ -23,6 +23,7 @@ export const GHL_FIELDS = {
   FACILITATOR_EMAIL: "l9dFoho2FPShAznPUrM9",
   HI_URL: "pypItuyHO6POQ2NpoTcZ",
   PHONE_OPP: "fWDDWkgGC79IssdGjIei",
+  WON_DATE_OPP: "EFzhPgf72GBYHnki7O6a",
 } as const;
 
 export const PIPELINE_ID = "b1raXFqNeALdRrsQwPD5";

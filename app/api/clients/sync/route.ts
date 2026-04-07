@@ -89,6 +89,7 @@ function buildClient(
     approved_by: intake?.approved_by || "",
     approved_at: intake?.approved_at || "",
     intake_url: intakeId ? `${platformBase}/intakes/${intakeId}/readonly` : "",
+    won_date: fmtDate(cfVal(cfs, GHL_FIELDS.WON_DATE_OPP)),
   };
 }
 
@@ -121,11 +122,17 @@ export async function POST() {
     console.log(`[clients-sync] Fetched ${allOpps.length} pipeline opportunities`);
 
     // 2. Use previous cache for incremental sync
+    //    If any cached row is missing won_date (added 2026-04-07), force a full
+    //    refetch by ignoring the cache — one-time backfill cost.
+    const cacheNeedsBackfill = prevCache?.clients.some((c) => c.won_date === undefined) ?? false;
+    if (cacheNeedsBackfill) {
+      console.log("[clients-sync] Cache missing won_date — forcing full refetch");
+    }
     const prevByOppId = new Map<string, Client>();
-    if (prevCache) {
+    if (prevCache && !cacheNeedsBackfill) {
       for (const c of prevCache.clients) prevByOppId.set(c.opp_id, c);
     }
-    const lastSynced = prevCache?.last_synced ?? null;
+    const lastSynced = cacheNeedsBackfill ? null : (prevCache?.last_synced ?? null);
 
     // 3. Build intake index by email
     const intakes = await getIntakes(500);
@@ -178,6 +185,7 @@ export async function POST() {
       client.ip_integ = cached.ip_integ;
       client.integ1 = cached.integ1;
       client.integ2 = cached.integ2;
+      client.won_date = cached.won_date;
       clients.push(client);
     }
 
