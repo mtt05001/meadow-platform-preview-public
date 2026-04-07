@@ -345,27 +345,14 @@ export async function GET() {
       const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
       const isPrep1 = label === "Prep 1";
       const isHigherPrep = /^Prep \d+$/.test(label) && !isPrep1;
-      let status: "green" | "yellow" | "red";
+      // Only two states: Ready (green) or Missing (red).
+      let status: "green" | "red";
       if (isPrep1) {
         status = hiOk ? "green" : "red";
-      } else if (hiOk && ohaOk) {
-        status = "green";
-      } else if (
-        [
-          "Journey",
-          "Room",
-          "In-Person Prep",
-          "In-Person Integration",
-        ].includes(label) ||
-        isHigherPrep ||
-        /^Integration \d+$/.test(label)
-      ) {
-        // Missing HI → red. Otherwise OHA decides yellow vs red.
-        status = !hiOk ? "red" : ohaOk ? "yellow" : "red";
       } else if (label === "Taper") {
         status = "green";
       } else {
-        status = "yellow";
+        status = hiOk && ohaOk ? "green" : "red";
       }
 
       const dayKey = dt.toLocaleDateString("en-US", {
