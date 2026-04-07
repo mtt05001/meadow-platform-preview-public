@@ -347,7 +347,7 @@ export async function GET() {
       const isHigherPrep = /^Prep \d+$/.test(label) && !isPrep1;
       let status: "green" | "yellow" | "red";
       if (isPrep1) {
-        status = hiOk ? "green" : "yellow";
+        status = hiOk ? "green" : "red";
       } else if (hiOk && ohaOk) {
         status = "green";
       } else if (
@@ -360,7 +360,8 @@ export async function GET() {
         isHigherPrep ||
         /^Integration \d+$/.test(label)
       ) {
-        status = ohaOk ? "yellow" : "red";
+        // Missing HI → red. Otherwise OHA decides yellow vs red.
+        status = !hiOk ? "red" : ohaOk ? "yellow" : "red";
       } else if (label === "Taper") {
         status = "green";
       } else {
