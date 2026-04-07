@@ -66,6 +66,121 @@ function clientToInfo(c: Client): ContactInfo {
   };
 }
 
+interface RawEvent {
+  startTime?: string;
+  contactId?: string;
+  appointmentStatus?: string;
+  title?: string;
+  _calId: string;
+}
+
+type EventBuckets = Record<string, RawEvent[]>;
+
+/**
+ * Label a Prep or Integration event by its position within the contact's
+ * journey cycle. Each "cycle" is bounded by Journey events on the calendar.
+ *   - Integration N: Nth integration after the most recent journey
+ *   - Prep N:        Nth prep before the next upcoming journey
+ *
+ * `buckets[type]` must be sorted chronologically (ascending).
+ */
+function labelChronological(
+  ev: RawEvent,
+  type: "Prep" | "Integration",
+  buckets: EventBuckets,
+): string {
+  const journeys = buckets.Journey || [];
+  const sameType = buckets[type] || [];
+  const evMs = new Date(ev.startTime!).getTime();
+
+  if (type === "Integration") {
+    // Most recent journey at or before this event = cycle lower bound
+    const prevJourney = [...journeys]
+      .reverse()
+      .find((j) => new Date(j.startTime!).getTime() <= evMs);
+    const prevMs = prevJourney
+      ? new Date(prevJourney.startTime!).getTime()
+      : -Infinity;
+    // Next journey strictly after = cycle upper bound
+    const nextJourney = journeys.find(
+      (j) => new Date(j.startTime!).getTime() > evMs,
+    );
+    const nextMs = nextJourney
+      ? new Date(nextJourney.startTime!).getTime()
+      : Infinity;
+    const cycleEvents = sameType.filter((e) => {
+      const t = new Date(e.startTime!).getTime();
+      return t >= prevMs && t < nextMs;
+    });
+    const idx = cycleEvents.indexOf(ev);
+    return `${type} ${idx + 1}`;
+  } else {
+    // Prep: associate with the next upcoming journey (its cycle)
+    const nextJourney = journeys.find(
+      (j) => new Date(j.startTime!).getTime() >= evMs,
+    );
+    const nextMs = nextJourney
+      ? new Date(nextJourney.startTime!).getTime()
+      : Infinity;
+    const prevJourney = [...journeys]
+      .reverse()
+      .find((j) => new Date(j.startTime!).getTime() < evMs);
+    const prevMs = prevJourney
+      ? new Date(prevJourney.startTime!).getTime()
+      : -Infinity;
+    const cycleEvents = sameType.filter((e) => {
+      const t = new Date(e.startTime!).getTime();
+      return t > prevMs && t <= nextMs;
+    });
+    const idx = cycleEvents.indexOf(ev);
+    return `${type} ${idx + 1}`;
+  }
+}
+
+/**
+ * Label a Room event as In-Person Prep or In-Person Integration based on its
+ * position relative to the closest journey. Falls back to the journey field
+ * from the contact's GHL opportunity when no journey appointment exists on
+ * the calendar (handles cases like Norman Rose where the journey only lives
+ * in the field).
+ */
+function labelRoomHybrid(
+  ev: RawEvent,
+  buckets: EventBuckets,
+  fallbackJourney: string,
+  eventDateYmd: string,
+): string {
+  const journeys = buckets.Journey || [];
+  const evMs = new Date(ev.startTime!).getTime();
+
+  if (journeys.length > 0) {
+    let closest = journeys[0];
+    let closestDelta = Math.abs(
+      new Date(closest.startTime!).getTime() - evMs,
+    );
+    for (const j of journeys) {
+      const d = Math.abs(new Date(j.startTime!).getTime() - evMs);
+      if (d < closestDelta) {
+        closest = j;
+        closestDelta = d;
+      }
+    }
+    const closestMs = new Date(closest.startTime!).getTime();
+    if (evMs < closestMs) return "In-Person Prep";
+    if (evMs > closestMs) return "In-Person Integration";
+    return "Room";
+  }
+
+  // Fallback: contact has no journey appointment on the calendar — use the
+  // journey date from the opportunity custom field if available.
+  if (fallbackJourney) {
+    const jd = fallbackJourney.slice(0, 10);
+    if (eventDateYmd < jd) return "In-Person Prep";
+    if (eventDateYmd > jd) return "In-Person Integration";
+  }
+  return "Room";
+}
+
 export async function GET() {
   await auth.protect();
 
@@ -122,23 +237,27 @@ export async function GET() {
       }
     }
 
-    // 4. Fetch events from GHL calendars
-    interface RawEvent {
-      startTime?: string;
-      contactId?: string;
-      appointmentStatus?: string;
-      title?: string;
-      _calId: string;
-    }
+    // 4. Fetch events from GHL calendars.
+    //
+    // Calendars whose events need chronological context (Journey/Room/Prep/
+    // Integration) are fetched in a wider ±180 day window so we can correctly
+    // partition each contact's prep/integration cycles around their journeys.
+    // Other calendar types (Taper, etc.) are fetched only in the 7-day display
+    // window since they don't need chronological history.
+    const widenedTypes = new Set(["Journey", "Room", "Prep", "Integration"]);
+    const widenedStartMs = startUtcMs - 180 * 24 * 60 * 60 * 1000;
+    const widenedEndMs = endUtcMs + 180 * 24 * 60 * 60 * 1000;
+
     const allEvents: RawEvent[] = [];
     await Promise.all(
-      Object.keys(calMap).map(async (calId) => {
+      Object.entries(calMap).map(async ([calId, meta]) => {
+        const widened = widenedTypes.has(meta.type);
         try {
           const { events = [] } = (await ghl("/calendars/events", {
             locationId: LOCATION,
             calendarId: calId,
-            startTime: String(startUtcMs),
-            endTime: String(endUtcMs),
+            startTime: String(widened ? widenedStartMs : startUtcMs),
+            endTime: String(widened ? widenedEndMs : endUtcMs),
           })) as { events?: Record<string, unknown>[] };
           for (const e of events) {
             const s = String(e.appointmentStatus || "").toLowerCase();
@@ -151,10 +270,40 @@ export async function GET() {
       }),
     );
 
-    // 5. Build days map — enrich from cached client data (no GHL calls)
+    // 4b. Build per-contact event index (sorted chronologically per type) for
+    // chronological labeling. Includes all fetched events, even those outside
+    // the 7-day display window — they're needed to determine cycle position.
+    const eventsByContact = new Map<string, EventBuckets>();
+    for (const ev of allEvents) {
+      if (!ev.contactId || !ev.startTime) continue;
+      const meta = calMap[ev._calId];
+      if (!meta) continue;
+      if (!eventsByContact.has(ev.contactId))
+        eventsByContact.set(ev.contactId, {});
+      const buckets = eventsByContact.get(ev.contactId)!;
+      if (!buckets[meta.type]) buckets[meta.type] = [];
+      buckets[meta.type].push(ev);
+    }
+    for (const buckets of eventsByContact.values()) {
+      for (const t of Object.keys(buckets)) {
+        buckets[t].sort(
+          (a, b) =>
+            new Date(a.startTime!).getTime() -
+            new Date(b.startTime!).getTime(),
+        );
+      }
+    }
+
+    // 5. Build days map — only events within the 7-day display window get
+    // returned. Labels come from chronological position (using the wider per-
+    // contact event history fetched above), not from stale opportunity fields.
     const daysMap: Record<string, McEvent[]> = {};
     for (const ev of allEvents) {
       if (!ev.startTime) continue;
+      const evMs = new Date(ev.startTime).getTime();
+      // Skip events outside the 7-day display window
+      if (evMs < startUtcMs || evMs >= endUtcMs) continue;
+
       const dt = new Date(ev.startTime);
       const info = ev.contactId
         ? contactIndex.get(ev.contactId) ?? { ...DEFAULT_INFO }
@@ -175,40 +324,43 @@ export async function GET() {
       if (name === "Unknown") continue;
 
       const eventDate = dt.toLocaleDateString("en-CA", { timeZone: PT_TZ });
-      let etype = calMap[ev._calId]?.type || "Other";
+      const calType = calMap[ev._calId]?.type || "Other";
+      const buckets = ev.contactId
+        ? eventsByContact.get(ev.contactId) ?? {}
+        : {};
 
-      if (etype === "Room" && info.journey) {
-        const jd = info.journey.slice(0, 10);
-        if (eventDate < jd) etype = "In-Person Prep";
-        else if (eventDate > jd) etype = "In-Person Integration";
+      // Compute the display label using chronological logic (not stale fields)
+      let label: string;
+      if (calType === "Prep" || calType === "Integration") {
+        label = labelChronological(ev, calType, buckets);
+      } else if (calType === "Room") {
+        label = labelRoomHybrid(ev, buckets, info.journey, eventDate);
+      } else {
+        label = calType;
       }
-      const isPrep2 =
-        etype === "Prep" &&
-        !!info.prep1 &&
-        !!info.prep2 &&
-        eventDate === info.prep2.slice(0, 10);
-      const isInteg2 =
-        etype === "Integration" &&
-        !!info.integ1 &&
-        !!info.integ2 &&
-        eventDate === info.integ2.slice(0, 10);
 
+      // Status: Prep 1 only needs HI; Prep 2+ and In-Person variants need both
       const hiOk = ["Signed", "Reviewed"].includes(info.hi);
       const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
-      const isPrep1 = etype === "Prep" && !isPrep2;
+      const isPrep1 = label === "Prep 1";
+      const isHigherPrep = /^Prep \d+$/.test(label) && !isPrep1;
       let status: "green" | "yellow" | "red";
       if (isPrep1) {
         status = hiOk ? "green" : "yellow";
       } else if (hiOk && ohaOk) {
         status = "green";
       } else if (
-        ["Journey", "Room", "In-Person Prep", "In-Person Integration"].includes(
-          etype,
-        ) ||
-        (etype === "Prep" && isPrep2)
+        [
+          "Journey",
+          "Room",
+          "In-Person Prep",
+          "In-Person Integration",
+        ].includes(label) ||
+        isHigherPrep ||
+        /^Integration \d+$/.test(label)
       ) {
         status = ohaOk ? "yellow" : "red";
-      } else if (etype === "Taper") {
+      } else if (label === "Taper") {
         status = "green";
       } else {
         status = "yellow";
@@ -234,17 +386,6 @@ export async function GET() {
         minute: "2-digit",
         hour12: false,
       });
-
-      const label =
-        etype === "Prep"
-          ? isPrep2
-            ? "Prep 2"
-            : "Prep 1"
-          : etype === "Integration"
-            ? isInteg2
-              ? "Integration 2"
-              : "Integration 1"
-            : etype;
 
       if (!daysMap[dayKey]) daysMap[dayKey] = [];
       daysMap[dayKey].push({
