@@ -26,6 +26,11 @@ export const GHL_FIELDS = {
   WON_DATE_OPP: "EFzhPgf72GBYHnki7O6a",
 } as const;
 
+// GHL custom field IDs (contact-level)
+export const GHL_CONTACT_FIELDS = {
+  MEDICALLY_COMPLEX: "Wt5jp2MvYd2O90euOUoV",
+} as const;
+
 export const PIPELINE_ID = "b1raXFqNeALdRrsQwPD5";
 
 export const STAGE_MAP: Record<string, { order: number; name: string; group: "onboarding" | "prep" | "journey" | "integration" | "done" }> = {
@@ -168,6 +173,34 @@ export async function getOpportunityWithFacilitator(
     return { opportunity: opp, facilitatorEmail, error: null };
   } catch (e) {
     return { opportunity: null, facilitatorEmail: null, error: String(e) };
+  }
+}
+
+/** Fetch a single contact (full record, including customFields). */
+export async function fetchContact(
+  contactId: string,
+): Promise<{ contact: GHLContact | null; error: string | null }> {
+  try {
+    const data = (await ghlFetch(`/contacts/${contactId}`)) as { contact?: GHLContact };
+    return { contact: data.contact || null, error: null };
+  } catch (e) {
+    return { contact: null, error: String(e) };
+  }
+}
+
+/** Update one or more contact custom fields. WRITE — production data. */
+export async function updateContactCustomFields(
+  contactId: string,
+  customFields: { id: string; value: string }[],
+): Promise<{ ok: boolean; error: string | null }> {
+  try {
+    await ghlFetch(`/contacts/${contactId}`, {
+      method: "PUT",
+      body: JSON.stringify({ customFields }),
+    });
+    return { ok: true, error: null };
+  } catch (e) {
+    return { ok: false, error: String(e) };
   }
 }
 

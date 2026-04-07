@@ -70,6 +70,24 @@ export default function IntakeDetailPage() {
     queryFn: () => apiFetch<Intake>(`/api/intakes/${id}`),
   });
 
+  const { data: medComplex } = useQuery({
+    queryKey: ["intake", id, "medically-complex"],
+    queryFn: () => apiFetch<{ value: string }>(`/api/intakes/${id}/medically-complex`),
+  });
+
+  const setMedComplex = useMutation({
+    mutationFn: (value: "Yes" | "No") =>
+      apiFetch<{ value: string }>(`/api/intakes/${id}/medically-complex`, {
+        method: "PUT",
+        body: { value },
+      }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["intake", id, "medically-complex"], data);
+      toast.success(`Medically complex set to ${data.value}`);
+    },
+    onError: (e) => toast.error("Failed to update: " + e.message),
+  });
+
   // Only initialize editor content once from server data (not on every refetch)
   useEffect(() => {
     if (!intake || editorsInitialized.current) return;
@@ -339,6 +357,35 @@ export default function IntakeDetailPage() {
                   <span className="font-semibold text-[#1a4d2e]">{intake.facilitator}</span>
                 </div>
               )}
+              <div className="flex items-center gap-2 text-[14px] mt-1">
+                <span className="text-[#5a6c7d] font-medium">Medically Complex</span>
+                <div className="inline-flex rounded-md border border-[#e8e2d8] overflow-hidden">
+                  {(["Yes", "No"] as const).map((opt) => {
+                    const active = medComplex?.value === opt;
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        disabled={setMedComplex.isPending}
+                        onClick={() => setMedComplex.mutate(opt)}
+                        className={
+                          "px-3 py-1 text-[13px] font-semibold transition-colors disabled:opacity-50 " +
+                          (active
+                            ? opt === "Yes"
+                              ? "bg-[#c0392b] text-white"
+                              : "bg-[#1a4d2e] text-white"
+                            : "bg-white text-[#5a6c7d] hover:bg-[#f5f1eb]")
+                        }
+                      >
+                        {opt}
+                      </button>
+                    );
+                  })}
+                </div>
+                {medComplex === undefined && (
+                  <span className="text-[12px] text-[#9aa5b1]">loading…</span>
+                )}
+              </div>
             </div>
 
             {/* Right: utility links */}
