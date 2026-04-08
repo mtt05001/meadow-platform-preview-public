@@ -1,24 +1,33 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getIntakeById } from "@/lib/db";
+import { getIntakeById, getPatientByGhlContactId, upsertPatient } from "@/lib/db";
 import {
   searchContact,
-  fetchContact,
   updateContactCustomFields,
-  cfVal,
   GHL_CONTACT_FIELDS,
 } from "@/lib/ghl";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
 
-type CF = { id: string; fieldValue?: string; fieldValueString?: string; value?: string };
+interface ResolvedContact {
+  contactId: string;
+  email: string;
+  name: string | null;
+}
 
-async function resolveContactId(intakeId: string): Promise<{ contactId: string | null; error: string | null }> {
+async function resolveContact(
+  intakeId: string,
+): Promise<{ contact: ResolvedContact | null; error: string | null }> {
   const intake = await getIntakeById(intakeId);
-  if (!intake) return { contactId: null, error: "Intake not found" };
-  if (!intake.email) return { contactId: null, error: "Intake has no email" };
+  if (!intake) return { contact: null, error: "Intake not found" };
+  if (!intake.email) return { contact: null, error: "Intake has no email" };
   const { contact, error } = await searchContact(intake.email);
-  if (error || !contact) return { contactId: null, error: error || "Contact not found" };
-  return { contactId: contact.id, error: null };
+  if (error || !contact) return { contact: null, error: error || "Contact not found" };
+  const name =
+    [contact.firstName, contact.lastName].filter(Boolean).join(" ") || intake.name || null;
+  return {
+    contact: { contactId: contact.id, email: intake.email.toLowerCase(), name },
+    error: null,
+  };
 }
 
 export async function GET(
@@ -28,13 +37,10 @@ export async function GET(
   await auth.protect();
   try {
     const { id } = await params;
-    const { contactId, error } = await resolveContactId(id);
-    if (!contactId) return apiError(error || "Contact not found", 404);
-    const { contact, error: fetchErr } = await fetchContact(contactId);
-    if (!contact) return apiError(fetchErr || "Contact not found", 404);
-    const customFields = (contact.customFields as CF[]) || [];
-    const value = cfVal(customFields, GHL_CONTACT_FIELDS.MEDICALLY_COMPLEX);
-    return NextResponse.json({ value });
+    const { contact, error } = await resolveContact(id);
+    if (!contact) return apiError(error || "Contact not found", 404);
+    const patient = await getPatientByGhlContactId(contact.contactId);
+    return NextResponse.json({ value: patient?.medically_complex || "" });
   } catch (e) {
     return apiError(getErrorMessage(e));
   }
@@ -52,12 +58,20 @@ export async function PUT(
     if (value !== "Yes" && value !== "No" && value !== "") {
       return apiError("value must be 'Yes', 'No', or ''", 400);
     }
-    const { contactId, error } = await resolveContactId(id);
-    if (!contactId) return apiError(error || "Contact not found", 404);
-    const { ok, error: updateErr } = await updateContactCustomFields(contactId, [
+    const { contact, error } = await resolveContact(id);
+    if (!contact) return apiError(error || "Contact not found", 404);
+
+    // Write to GHL first — if it fails, don't persist locally (keeps DB and GHL in sync).
+    const { ok, error: updateErr } = await updateContactCustomFields(contact.contactId, [
       { id: GHL_CONTACT_FIELDS.MEDICALLY_COMPLEX, value },
     ]);
-    if (!ok) return apiError(updateErr || "Update failed");
+    if (!ok) return apiError(updateErr || "GHL update failed");
+
+    await upsertPatient(contact.contactId, {
+      email: contact.email,
+      name: contact.name,
+      medically_complex: value,
+    });
     return NextResponse.json({ value });
   } catch (e) {
     return apiError(getErrorMessage(e));

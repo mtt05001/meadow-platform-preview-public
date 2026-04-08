@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
-import { getClientCache } from "@/lib/db";
+import { getClientCache, getMedicallyComplexMap } from "@/lib/db";
 import { ghlFetch } from "@/lib/ghl";
 import type { Client } from "@/lib/types";
 import type { McData, McEvent, McAlert } from "@/lib/mission-control-types";
@@ -187,6 +187,7 @@ export async function GET() {
   try {
     // 1. Load enrichment data from Postgres client cache (synced by /api/clients/sync)
     const clientCache = await getClientCache();
+    const medicallyComplexMap = await getMedicallyComplexMap();
     // When a contact has multiple opportunities, prefer the one with the most
     // journey-related data populated. Otherwise the Map would silently overwrite
     // with whichever opp comes last, which can pick a stale/wrong record.
@@ -380,6 +381,9 @@ export async function GET() {
       });
 
       if (!daysMap[dayKey]) daysMap[dayKey] = [];
+      const medicallyComplex = ev.contactId
+        ? medicallyComplexMap.get(ev.contactId) === "Yes"
+        : false;
       daysMap[dayKey].push({
         time: timeStr,
         sort_key: sortKey,
@@ -390,6 +394,7 @@ export async function GET() {
         hi: info.hi,
         oha: info.oha,
         status,
+        medically_complex: medicallyComplex,
       });
     }
 

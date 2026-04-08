@@ -101,6 +101,11 @@ function EventRow({ ev }: { ev: McEvent }) {
           >
             {ev.type}
           </span>
+          {ev.medically_complex && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide bg-tier-red text-white">
+              Complex
+            </span>
+          )}
           {ev.facilitator && (
             <>
               <span className="text-bark-light/40">·</span>

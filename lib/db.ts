@@ -229,6 +229,69 @@ export async function upsertClientCache(clients: Client[]): Promise<void> {
   );
 }
 
+// ── Patients ─────────────────────────────────────────────────────────
+// The canonical local record of a person. Populated lazily (upserted
+// whenever we resolve a GHL contact id). Future per-person data hangs
+// off this table instead of creating new ones.
+
+export interface Patient {
+  id: string;
+  ghl_contact_id: string;
+  email: string | null;
+  name: string | null;
+  medically_complex: string;
+}
+
+export async function getPatientByGhlContactId(
+  ghlContactId: string,
+): Promise<Patient | null> {
+  const { rows } = await pool().query(
+    `SELECT id, ghl_contact_id, email, name, medically_complex
+     FROM patients WHERE ghl_contact_id = $1`,
+    [ghlContactId],
+  );
+  if (!rows.length) return null;
+  const r = rows[0];
+  return {
+    id: r.id as string,
+    ghl_contact_id: r.ghl_contact_id as string,
+    email: (r.email as string) || null,
+    name: (r.name as string) || null,
+    medically_complex: (r.medically_complex as string) || "",
+  };
+}
+
+export async function upsertPatient(
+  ghlContactId: string,
+  fields: { email?: string | null; name?: string | null; medically_complex?: string },
+): Promise<void> {
+  await pool().query(
+    `INSERT INTO patients (ghl_contact_id, email, name, medically_complex, updated_at)
+     VALUES ($1, $2, $3, COALESCE($4, ''), NOW())
+     ON CONFLICT (ghl_contact_id) DO UPDATE SET
+       email = COALESCE(EXCLUDED.email, patients.email),
+       name  = COALESCE(EXCLUDED.name,  patients.name),
+       medically_complex = CASE
+         WHEN $4 IS NULL THEN patients.medically_complex
+         ELSE EXCLUDED.medically_complex
+       END,
+       updated_at = NOW()`,
+    [ghlContactId, fields.email ?? null, fields.name ?? null, fields.medically_complex ?? null],
+  );
+}
+
+/** Map of ghl_contact_id → medically_complex for patients where it is set. */
+export async function getMedicallyComplexMap(): Promise<Map<string, string>> {
+  const { rows } = await pool().query(
+    `SELECT ghl_contact_id, medically_complex FROM patients WHERE medically_complex <> ''`,
+  );
+  const map = new Map<string, string>();
+  for (const r of rows) {
+    map.set(r.ghl_contact_id as string, (r.medically_complex as string) || "");
+  }
+  return map;
+}
+
 // ── AI Feedback ──────────────────────────────────────────────────────
 
 export async function insertFeedback(

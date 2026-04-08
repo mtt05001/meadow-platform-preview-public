@@ -8,6 +8,7 @@ export interface McEvent {
   hi: string;
   oha: string;
   status: "green" | "yellow" | "red";
+  medically_complex?: boolean;
 }
 
 export interface McDay {
