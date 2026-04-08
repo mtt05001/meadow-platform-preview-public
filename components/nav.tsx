@@ -27,7 +27,7 @@ const navLinks: NavLink[] = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/mission-control", label: "Mission Control", icon: Gauge, minRole: "admin" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, minRole: "admin" },
-  { href: "/schedule", label: "Schedule", icon: CalendarDays },
+  // { href: "/schedule", label: "Schedule", icon: CalendarDays }, // Removed from admin portal — will move to facilitator/client portals
   { href: "/screening", label: "Screening", icon: ShieldCheck },
   { href: "/admin", label: "Admin", icon: Settings, minRole: "admin" },
 ];
