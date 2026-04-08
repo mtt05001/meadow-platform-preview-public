@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 
@@ -30,66 +30,7 @@ interface ScheduleData {
   sessionTypes: SessionType[];
 }
 
-/* ---------- Constants ---------- */
-
-const AGE_KEY = "meadow_age_verified";
-
 /* ---------- Small Components ---------- */
-
-function AgeGate({ onVerified }: { onVerified: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a4d2e]">
-      <div
-        className="absolute inset-0 opacity-[0.04]"
-        style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, #fff 1px, transparent 1px),
-            radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px),
-            radial-gradient(circle at 50% 80%, #fff 1px, transparent 1px)`,
-          backgroundSize: "120px 120px, 80px 80px, 100px 100px",
-        }}
-      />
-      <div className="relative text-center px-6 max-w-md">
-        <p
-          className="text-[#c8d8c0] tracking-[0.35em] uppercase text-[11px] font-medium mb-6"
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          Meadow Medicine
-        </p>
-        <h1
-          className="text-white text-3xl sm:text-4xl leading-tight mb-4"
-          style={{ fontFamily: "var(--font-serif)" }}
-        >
-          Schedule a Session
-        </h1>
-        <div className="w-8 h-px bg-[#c8d8c0]/40 mx-auto mb-8" />
-        <p
-          className="text-[#c8d8c0]/80 text-[15px] leading-relaxed mb-10"
-          style={{ fontFamily: "var(--font-sans)" }}
-        >
-          You must be 21 years or older to access our scheduling services.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            onClick={onVerified}
-            className="px-8 py-3 bg-white text-[#1a4d2e] text-[14px] font-semibold tracking-wide rounded-sm
-              hover:bg-[#f5f1eb] transition-colors duration-200 cursor-pointer"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            I am 21 or older
-          </button>
-          <button
-            onClick={() => window.history.back()}
-            className="px-8 py-3 border border-[#c8d8c0]/30 text-[#c8d8c0]/70 text-[14px] tracking-wide rounded-sm
-              hover:border-[#c8d8c0]/50 hover:text-[#c8d8c0] transition-colors duration-200 cursor-pointer"
-            style={{ fontFamily: "var(--font-sans)" }}
-          >
-            I am under 21
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function StepLabel({
   number,
@@ -392,23 +333,6 @@ function ScheduleFlow() {
 /* ---------- Main Page ---------- */
 
 export default function SchedulePage() {
-  const [ageVerified, setAgeVerified] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setAgeVerified(sessionStorage.getItem(AGE_KEY) === "true");
-  }, []);
-
-  const handleVerified = useCallback(() => {
-    sessionStorage.setItem(AGE_KEY, "true");
-    setAgeVerified(true);
-  }, []);
-
-  if (ageVerified === null) return null;
-
-  if (!ageVerified) {
-    return <AgeGate onVerified={handleVerified} />;
-  }
-
   return (
     <div className="min-h-screen bg-[#f5f1eb] flex flex-col">
       <header className="border-b border-[#e8e2d8] bg-[#f5f1eb]">
