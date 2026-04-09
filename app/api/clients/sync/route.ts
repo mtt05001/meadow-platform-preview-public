@@ -90,6 +90,7 @@ function buildClient(
     approved_at: intake?.approved_at || "",
     intake_url: intakeId ? `${platformBase}/intakes/${intakeId}/readonly` : "",
     won_date: fmtDate(cfVal(cfs, GHL_FIELDS.WON_DATE_OPP)),
+    program: cfVal(cfs, GHL_FIELDS.PROGRAM),
   };
 }
 
@@ -124,6 +125,9 @@ export async function POST() {
     // 2. Use previous cache for incremental sync
     //    If any cached row is missing won_date (added 2026-04-07), force a full
     //    refetch by ignoring the cache — one-time backfill cost.
+    // Note: `program` does NOT need a backfill — it's returned by
+    // /opportunities/search (text field), so the unchanged branch's
+    // buildClient() call picks it up from searchCfs on the next sync.
     const cacheNeedsBackfill = prevCache?.clients.some((c) => c.won_date === undefined) ?? false;
     if (cacheNeedsBackfill) {
       console.log("[clients-sync] Cache missing won_date — forcing full refetch");

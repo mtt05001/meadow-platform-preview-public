@@ -24,6 +24,7 @@ export const GHL_FIELDS = {
   HI_URL: "pypItuyHO6POQ2NpoTcZ",
   PHONE_OPP: "fWDDWkgGC79IssdGjIei",
   WON_DATE_OPP: "EFzhPgf72GBYHnki7O6a",
+  PROGRAM: "XvMvpHGCIdm1vIV4hRZV",
 } as const;
 
 // GHL custom field IDs (contact-level)

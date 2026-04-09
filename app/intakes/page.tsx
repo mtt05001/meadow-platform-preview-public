@@ -100,23 +100,65 @@ export default function IntakesPage() {
   const { isSyncing: ghlSyncing } = useClientSync();
 
   const sorted = sortByPrep1(intakes);
-  const needsReview = sorted.filter((i) => i.status === "pending" || i.status === "sending");
+
+  // Index clients by email for tapering lookup
+  const clientByEmail = new Map<string, Client>();
+  for (const c of clientData?.clients ?? []) {
+    if (c.email) clientByEmail.set(c.email.toLowerCase(), c);
+  }
+  // A client is "taper-pending" when Program = Tapering and Prep 1 is empty.
+  // These get routed to the Taper tab instead of the normal queue tabs.
+  const isTaperPending = (email: string | undefined): boolean => {
+    if (!email) return false;
+    const c = clientByEmail.get(email.toLowerCase());
+    return !!c && c.program === "Tapering" && !c.prep1;
+  };
+
+  const needsReview = sorted.filter(
+    (i) => (i.status === "pending" || i.status === "sending") && !isTaperPending(i.email),
+  );
   const reviewed = sortByApprovedDesc(
-    intakes.filter((i) => i.status !== "pending" && i.status !== "sending"),
+    intakes.filter(
+      (i) =>
+        i.status !== "pending" &&
+        i.status !== "sending" &&
+        !isTaperPending(i.email),
+    ),
   );
 
-  // Onboarding: GHL clients with HI = Sent, excluding anyone with a pending intake
+  // Onboarding: GHL clients with HI = Sent, excluding taper-pending and anyone with a pending intake
   const pendingEmails = new Set(
     needsReview.map((i) => i.email?.toLowerCase()).filter(Boolean),
   );
   const onboarding = (clientData?.clients ?? [])
-    .filter((c) => c.hi_status === "Sent" && c.stage_name !== "Refunded" && !pendingEmails.has(c.email?.toLowerCase()))
+    .filter(
+      (c) =>
+        c.hi_status === "Sent" &&
+        c.stage_name !== "Refunded" &&
+        !pendingEmails.has(c.email?.toLowerCase()) &&
+        !(c.program === "Tapering" && !c.prep1),
+    )
     .sort((a, b) => {
       if (!a.prep1 && !b.prep1) return 0;
       if (!a.prep1) return 1;
       if (!b.prep1) return -1;
       return new Date(a.prep1).getTime() - new Date(b.prep1).getTime();
     });
+
+  // Taper: intakes that are taper-pending, plus GHL clients that are
+  // taper-pending without a matching intake (mirrors the Onboarding pattern).
+  const taperIntakes = sorted.filter((i) => isTaperPending(i.email));
+  const taperIntakeEmails = new Set(
+    taperIntakes.map((i) => i.email?.toLowerCase()).filter(Boolean),
+  );
+  const taperClients = (clientData?.clients ?? []).filter(
+    (c) =>
+      c.program === "Tapering" &&
+      !c.prep1 &&
+      c.stage_name !== "Refunded" &&
+      !taperIntakeEmails.has(c.email?.toLowerCase()),
+  );
+  const taperCount = taperIntakes.length + taperClients.length;
 
   return (
     <div className="min-h-screen bg-[#f5f1eb]">
@@ -199,6 +241,9 @@ export default function IntakesPage() {
               <TabsTrigger value="needs-review" className="text-[15px] px-4 py-2">
                 Needs Review ({needsReview.length})
               </TabsTrigger>
+              <TabsTrigger value="taper" className="text-[15px] px-4 py-2">
+                Taper ({taperCount})
+              </TabsTrigger>
               <TabsTrigger value="onboarding" className="text-[15px] px-4 py-2">
                 Onboarding ({onboarding.length})
               </TabsTrigger>
@@ -239,6 +284,23 @@ export default function IntakesPage() {
               ) : (
                 <div className="py-6 text-center text-[#7f8c8d] italic">
                   No pending reviews 🎉
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="taper">
+              {taperCount > 0 ? (
+                <div className="space-y-4">
+                  {taperIntakes.map((intake) => (
+                    <QueueCard key={intake.id} intake={intake} />
+                  ))}
+                  {taperClients.map((client) => (
+                    <QueueCard key={client.opp_id} client={client} />
+                  ))}
+                </div>
+              ) : (
+                <div className="py-6 text-center text-[#7f8c8d] italic">
+                  No tapering clients right now
                 </div>
               )}
             </TabsContent>
