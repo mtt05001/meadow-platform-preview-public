@@ -276,6 +276,7 @@ export async function POST() {
       if (!intake) continue;
 
       const fields: Record<string, string | null> = {};
+      if (client.name && client.name !== "Unknown" && client.name !== intake.name) fields.name = client.name;
       if (client.prep1 && client.prep1 !== intake.prep1_date) fields.prep1_date = client.prep1;
       if (client.facilitator && client.facilitator !== intake.facilitator) fields.facilitator = client.facilitator;
       if (client.hi_status && client.hi_status !== intake.ghl_hi_status) fields.ghl_hi_status = client.hi_status;

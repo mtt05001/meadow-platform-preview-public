@@ -10,6 +10,7 @@
  */
 
 import type { HardContraindication } from "./types";
+import { titleCase } from "./utils";
 
 // ---------------------------------------------------------------------------
 // Hard Contraindication Lists
@@ -180,14 +181,14 @@ function str(val: unknown): string {
 export function extractClientData(submission: Record<string, unknown>): ClientData {
   const answers = (submission.answers ?? {}) as Record<string, Record<string, unknown>>;
 
-  // Name
+  // Name — title-case each part (Jotform stores whatever the patient typed)
   const nameAns = getAnswer(answers, "4");
   let name: string;
   if (typeof nameAns === "object" && nameAns !== null && !Array.isArray(nameAns)) {
     const n = nameAns as Record<string, string>;
-    name = `${n.first ?? ""} ${n.last ?? ""}`.trim();
+    name = titleCase(`${n.first ?? ""} ${n.last ?? ""}`.trim());
   } else {
-    name = str(nameAns);
+    name = titleCase(str(nameAns));
   }
 
   // DOB & Age

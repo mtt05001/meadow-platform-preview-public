@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import { marked } from "marked";
 import type { Intake, AiFeedback } from "@/lib/types";
+import { titleCase } from "@/lib/utils";
 import Nav from "@/components/nav";
 import {
   Sheet,
@@ -308,7 +309,7 @@ export default function IntakeDetailPage() {
   if (!intake) return null;
 
   const client = intake.client_data || {};
-  const clientName = (client.name as string) || intake.name || "Unknown";
+  const clientName = titleCase((client.name as string) || intake.name || "Unknown");
   const clientAge = client.age ? `${client.age}yo` : "";
   const clientSex = client.sex
     ? String(client.sex).charAt(0).toUpperCase() + String(client.sex).slice(1)

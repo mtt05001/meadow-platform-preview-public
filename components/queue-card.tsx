@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import type { Intake, Client } from "@/lib/types";
+import { titleCase } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -125,7 +126,7 @@ function fromIntake(intake: Intake): CardData {
   const isCompleted = intake.status === "approved" || intake.status === "rejected" || intake.status === "archived";
   return {
     id: intake.id,
-    name: intake.name || "Unknown",
+    name: titleCase(intake.name) || "Unknown",
     email: intake.email,
     facilitator: intake.facilitator,
     prep1: intake.prep1_date,
@@ -146,7 +147,7 @@ function fromClient(client: Client): CardData {
   const href = client.intake_id ? `/intakes/${client.intake_id}/readonly` : undefined;
   return {
     id: client.opp_id,
-    name: client.name,
+    name: titleCase(client.name),
     email: client.email,
     facilitator: client.facilitator || null,
     prep1: client.prep1 || null,
