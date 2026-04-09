@@ -37,6 +37,7 @@ interface ContactInfo {
   journey: string;
   integ1: string;
   integ2: string;
+  program: string;
 }
 
 const DEFAULT_INFO: ContactInfo = {
@@ -49,6 +50,7 @@ const DEFAULT_INFO: ContactInfo = {
   journey: "",
   integ1: "",
   integ2: "",
+  program: "",
 };
 
 /** Convert a cached Client record into ContactInfo for event enrichment. */
@@ -63,6 +65,7 @@ function clientToInfo(c: Client): ContactInfo {
     journey: c.journey || "",
     integ1: c.integ1 || "",
     integ2: c.integ2 || "",
+    program: c.program || "",
   };
 }
 
@@ -343,18 +346,23 @@ export async function GET() {
         label = calType;
       }
 
-      // Status: Prep 1 only needs HI; Prep 2+ and In-Person variants need both
-      // HI must be Reviewed to count as ready — Signed alone is not enough
+      // Determine which docs are needed per appointment type:
+      //   Prep 1: only HI needed (OHA not yet required)
+      //   Taper: neither needed
+      //   Everything else: both HI and OHA needed
+      const isPrep1 = label === "Prep 1";
+      const isTaper = calType === "Taper";
+      const hiNeeded = !isTaper;
+      const ohaNeeded = !isTaper && !isPrep1;
+
       const hiOk = info.hi === "Reviewed";
       const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
-      const isPrep1 = label === "Prep 1";
-      const isHigherPrep = /^Prep \d+$/.test(label) && !isPrep1;
       // Only two states: Ready (green) or Missing (red).
       let status: "green" | "red";
-      if (isPrep1) {
-        status = hiOk ? "green" : "red";
-      } else if (calType === "Taper") {
+      if (isTaper) {
         status = "green";
+      } else if (isPrep1) {
+        status = hiOk ? "green" : "red";
       } else {
         status = hiOk && ohaOk ? "green" : "red";
       }
@@ -393,6 +401,9 @@ export async function GET() {
         journey: info.journey,
         hi: info.hi,
         oha: info.oha,
+        hi_needed: hiNeeded,
+        oha_needed: ohaNeeded,
+        program: info.program,
         status,
         medically_complex: medicallyComplex,
       });

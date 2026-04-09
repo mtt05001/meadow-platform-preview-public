@@ -7,6 +7,9 @@ export interface McEvent {
   journey: string;
   hi: string;
   oha: string;
+  hi_needed: boolean;
+  oha_needed: boolean;
+  program: string;
   status: "green" | "yellow" | "red";
   medically_complex?: boolean;
 }

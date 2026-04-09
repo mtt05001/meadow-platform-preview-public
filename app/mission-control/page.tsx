@@ -6,18 +6,18 @@ import { useClientSync } from "@/lib/use-client-sync";
 import type { McData, McEvent } from "@/lib/mission-control-types";
 import Nav from "@/components/nav";
 
-function pillClass(v: string): string {
-  if (!v || v === "—") return "miss";
+function pillClass(v: string, needed: boolean): string {
+  if (!needed) return "na";
+  if (!v || v === "—" || v === "None") return "miss";
   const l = v.toLowerCase();
   if (l.includes("reviewed")) return "ok";
-  if (l.includes("signed") || l.includes("sent")) return "warn";
   return "miss";
 }
 
 const PILL_STYLES: Record<string, string> = {
   ok: "bg-tier-green-bg text-green-800",
-  warn: "bg-tier-yellow-bg text-yellow-800",
   miss: "bg-red-50 text-red-700",
+  na: "bg-gray-100 text-gray-400",
 };
 
 function badgeClass(type: string): string {
@@ -88,24 +88,31 @@ function computeFacilitatorLoad(data: McData): [string, number][] {
 }
 
 function EventRow({ ev }: { ev: McEvent }) {
+  const programLabel = ev.program || "Standard Journey";
+  const hiPill = pillClass(ev.hi, ev.hi_needed);
+  const ohaPill = pillClass(ev.oha, ev.oha_needed);
+
   return (
-    <div className="grid grid-cols-[90px_1fr_110px] items-center px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
-      <div className="text-sm font-semibold text-bark tabular-nums">
-        {ev.time}
-      </div>
-      <div className="flex flex-col gap-1">
+    <div className="grid grid-cols-[1fr_110px] px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
+      <div className="flex flex-col gap-1.5">
+        {/* Row 1: Client name + Program */}
         <div className="flex items-center gap-2.5">
           <span className="font-semibold text-base text-bark">{ev.name}</span>
-          <span
-            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${badgeClass(ev.type)}`}
-          >
-            {ev.type}
-          </span>
+          <span className="text-sm font-semibold text-bark-light">{programLabel}</span>
           {ev.medically_complex && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide bg-tier-red text-white">
               Complex
             </span>
           )}
+        </div>
+        {/* Row 2: Time + Appointment type + Facilitator */}
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-semibold text-bark tabular-nums">{ev.time}</span>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide ${badgeClass(ev.type)}`}
+          >
+            {ev.type}
+          </span>
           {ev.facilitator && (
             <>
               <span className="text-bark-light/40">·</span>
@@ -113,25 +120,24 @@ function EventRow({ ev }: { ev: McEvent }) {
             </>
           )}
         </div>
-        <div className="flex gap-2 mt-0.5 flex-wrap">
-            <span
-              className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[pillClass(ev.hi)]}`}
-            >
-              HI: {ev.hi}
-            </span>
-            <span
-              className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[pillClass(ev.oha)]}`}
-            >
-              OHA: {ev.oha}
-            </span>
-            <span
-              className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${ev.journey ? "bg-purple-100 text-purple-700" : "bg-gray-100 text-gray-500"}`}
-            >
-              Journey: {formatJourneyDate(ev.journey)}
-            </span>
-          </div>
+        {/* Row 3: HI + OHA + Journey date */}
+        <div className="flex gap-2 flex-wrap">
+          <span
+            className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[hiPill]}`}
+          >
+            HI: {ev.hi}
+          </span>
+          <span
+            className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[ohaPill]}`}
+          >
+            OHA: {ev.oha}
+          </span>
+          <span className="text-sm font-medium text-bark-light">
+            Journey: {formatJourneyDate(ev.journey)}
+          </span>
+        </div>
       </div>
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-start justify-end gap-2 pt-1">
         <span className={`text-xs font-semibold whitespace-nowrap ${(STATUS_LABEL[ev.status] || STATUS_LABEL.pipeline).color}`}>
           {(STATUS_LABEL[ev.status] || STATUS_LABEL.pipeline).text}
         </span>
