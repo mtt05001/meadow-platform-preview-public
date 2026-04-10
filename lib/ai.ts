@@ -45,14 +45,18 @@ Provide a structured clinical summary (for internal clinical team only) in this 
 
 ### Risk Assessment
 - Overall Risk Tier (green/yellow/red) with brief justification
-- Risk Score (out of 10) with brief justification
-- Do NOT use the labels "Hard Contraindications", "Soft Contraindication Score", or any variation — just list "Overall Risk Tier" and "Risk Score" with clinical findings beneath
+- Do NOT use the labels "Hard Contraindications", "Soft Contraindication Score", or any variation — just list "Overall Risk Tier" with clinical findings beneath
+- Do NOT include a "Risk Score" line — only the Overall Risk Tier
 
 ### Key Considerations
 - Any special clinical considerations
 
 ### Recommendations for Facilitator Team
 - Clinical recommendations for the facilitator team
+
+### Medication Guidance
+- Repeat the same medication-by-medication guidance from the email section above (medication name, dose, and specific instruction for each)
+- This is so the facilitator team has the medication guidance alongside the risk stratification without needing to check the email
 
 ### Medical History
 - All conditions reported

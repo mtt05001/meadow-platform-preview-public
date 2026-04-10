@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api-client";
 import dynamic from "next/dynamic";
 import { marked } from "marked";
-import type { Intake, AiFeedback } from "@/lib/types";
+import type { Intake, AiFeedback, ClientCache } from "@/lib/types";
 import { titleCase } from "@/lib/utils";
 import Nav from "@/components/nav";
 import {
@@ -75,6 +75,19 @@ export default function IntakeDetailPage() {
     queryKey: ["intake", id, "medically-complex"],
     queryFn: () => apiFetch<{ value: string }>(`/api/intakes/${id}/medically-complex`),
   });
+
+  const { data: clientCache } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => apiFetch<ClientCache>("/api/clients"),
+  });
+
+  const clientProgram = (() => {
+    if (!intake?.email || !clientCache?.clients) return null;
+    const match = clientCache.clients.find(
+      (c) => c.email?.toLowerCase() === intake.email.toLowerCase(),
+    );
+    return match?.program || null;
+  })();
 
   const setMedComplex = useMutation({
     mutationFn: (value: "Yes" | "No") =>
@@ -356,6 +369,12 @@ export default function IntakeDetailPage() {
                   </svg>
                   <span className="text-[#5a6c7d]">Lead Facilitator</span>
                   <span className="font-semibold text-[#1a4d2e]">{intake.facilitator}</span>
+                </div>
+              )}
+              {clientProgram && (
+                <div className="flex items-center gap-2 text-[16px]">
+                  <span className="text-[#5a6c7d]">Program</span>
+                  <span className="font-semibold text-[#1a4d2e]">{clientProgram}</span>
                 </div>
               )}
               <div className="flex items-center gap-2 text-[14px] mt-1">
