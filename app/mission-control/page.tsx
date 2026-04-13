@@ -98,17 +98,22 @@ function EventRow({ ev }: { ev: McEvent }) {
   return (
     <div className="grid grid-cols-[1fr_110px] px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
       <div className="flex flex-col gap-1.5">
-        {/* Row 1: Client name + Program */}
+        {/* Row 1: Client name + Facilitator */}
         <div className="flex items-center gap-2.5">
           <span className="font-semibold text-base text-bark">{ev.name}</span>
-          <span className="text-sm font-semibold text-bark-light">{programLabel}</span>
+          {ev.facilitator && (
+            <>
+              <span className="text-bark-light/40">·</span>
+              <span className="text-sm font-semibold text-bark-light">{ev.facilitator}</span>
+            </>
+          )}
           {ev.medically_complex && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide bg-tier-red text-white">
               Complex
             </span>
           )}
         </div>
-        {/* Row 2: Time + Appointment type + Facilitator */}
+        {/* Row 2: Time + Appointment type + Program */}
         <div className="flex items-center gap-2.5">
           <span className="text-sm font-semibold text-bark tabular-nums">{ev.time}</span>
           <span
@@ -116,12 +121,7 @@ function EventRow({ ev }: { ev: McEvent }) {
           >
             {ev.type}
           </span>
-          {ev.facilitator && (
-            <>
-              <span className="text-bark-light/40">·</span>
-              <span className="text-sm text-bark-light">{ev.facilitator}</span>
-            </>
-          )}
+          <span className="text-sm font-semibold text-bark-light">{programLabel}</span>
         </div>
         {/* Row 3: HI + OHA + Journey date */}
         <div className="flex gap-2 flex-wrap">
