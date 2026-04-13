@@ -34,7 +34,9 @@ interface ContactInfo {
   fac: string | null;
   prep1: string;
   prep2: string;
+  ip_prep: string;
   journey: string;
+  ip_integ: string;
   integ1: string;
   integ2: string;
   program: string;
@@ -47,7 +49,9 @@ const DEFAULT_INFO: ContactInfo = {
   fac: null,
   prep1: "",
   prep2: "",
+  ip_prep: "",
   journey: "",
+  ip_integ: "",
   integ1: "",
   integ2: "",
   program: "",
@@ -62,7 +66,9 @@ function clientToInfo(c: Client): ContactInfo {
     fac: c.facilitator || null,
     prep1: c.prep1 || "",
     prep2: c.prep2 || "",
+    ip_prep: c.ip_prep || "",
     journey: c.journey || "",
+    ip_integ: c.ip_integ || "",
     integ1: c.integ1 || "",
     integ2: c.integ2 || "",
     program: c.program || "",
@@ -150,11 +156,18 @@ function labelChronological(
 function labelRoomHybrid(
   ev: RawEvent,
   buckets: EventBuckets,
-  fallbackJourney: string,
+  info: ContactInfo,
   eventDateYmd: string,
 ): string {
   const journeys = buckets.Journey || [];
   const evMs = new Date(ev.startTime!).getTime();
+
+  // First check: if the event date matches the GHL ip_prep or ip_integ field,
+  // use that directly — it's the most reliable signal.
+  if (info.ip_prep && eventDateYmd === info.ip_prep.slice(0, 10))
+    return "In-Person Prep";
+  if (info.ip_integ && eventDateYmd === info.ip_integ.slice(0, 10))
+    return "In-Person Integration";
 
   if (journeys.length > 0) {
     let closest = journeys[0];
@@ -176,8 +189,8 @@ function labelRoomHybrid(
 
   // Fallback: contact has no journey appointment on the calendar — use the
   // journey date from the opportunity custom field if available.
-  if (fallbackJourney) {
-    const jd = fallbackJourney.slice(0, 10);
+  if (info.journey) {
+    const jd = info.journey.slice(0, 10);
     if (eventDateYmd < jd) return "In-Person Prep";
     if (eventDateYmd > jd) return "In-Person Integration";
   }
@@ -338,7 +351,7 @@ export async function GET() {
       if (calType === "Prep" || calType === "Integration") {
         label = labelChronological(ev, calType, buckets);
       } else if (calType === "Room") {
-        label = labelRoomHybrid(ev, buckets, info.journey, eventDate);
+        label = labelRoomHybrid(ev, buckets, info, eventDate);
       } else if (calType === "Taper") {
         // Taper calendar groups many appointment types — show the actual title
         label = (ev.title || "").split("|")[0]?.trim() || "Taper";
