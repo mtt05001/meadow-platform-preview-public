@@ -426,20 +426,6 @@ export default function IntakeDetailPage() {
                   </svg>
                   Original Intake
                 </a>
-                <a
-                  href={`https://www.jotform.com/inbox/${jfFormId}/${jfId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="
-                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium
-                    text-[#2c3e50] bg-[#f5f1eb] hover:bg-[#ebe5db] transition-colors
-                  "
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                  </svg>
-                  Jotform
-                </a>
               </div>
             )}
           </div>
