@@ -76,6 +76,7 @@ export interface Client {
   intake_url: string;
   won_date: string;
   program: string;
+  consult_note: string;
 }
 
 export interface ClientCache {

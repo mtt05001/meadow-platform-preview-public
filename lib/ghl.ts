@@ -30,6 +30,7 @@ export const GHL_FIELDS = {
 // GHL custom field IDs (contact-level)
 export const GHL_CONTACT_FIELDS = {
   MEDICALLY_COMPLEX: "Wt5jp2MvYd2O90euOUoV",
+  CONSULT_NOTE: "KhIT42tFou4jsgIGHWq5",
 } as const;
 
 export const PIPELINE_ID = "b1raXFqNeALdRrsQwPD5";
@@ -295,6 +296,16 @@ export async function fetchOpportunityDetails(
     opportunity?: Record<string, unknown>;
   };
   return data.opportunity || {};
+}
+
+/** Fetch a GHL contact by ID (includes contact-level custom fields). */
+export async function fetchContactById(
+  contactId: string,
+): Promise<Record<string, unknown>> {
+  const data = (await ghlFetch(`/contacts/${contactId}`)) as {
+    contact?: Record<string, unknown>;
+  };
+  return data.contact || {};
 }
 
 /** Normalize raw HI status string. */

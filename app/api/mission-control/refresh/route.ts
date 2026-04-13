@@ -40,6 +40,7 @@ interface ContactInfo {
   integ1: string;
   integ2: string;
   program: string;
+  consult_note: string;
 }
 
 const DEFAULT_INFO: ContactInfo = {
@@ -55,6 +56,7 @@ const DEFAULT_INFO: ContactInfo = {
   integ1: "",
   integ2: "",
   program: "",
+  consult_note: "",
 };
 
 /** Convert a cached Client record into ContactInfo for event enrichment. */
@@ -72,6 +74,7 @@ function clientToInfo(c: Client): ContactInfo {
     integ1: c.integ1 || "",
     integ2: c.integ2 || "",
     program: c.program || "",
+    consult_note: c.consult_note || "",
   };
 }
 
@@ -360,22 +363,24 @@ export async function GET() {
       }
 
       // Determine which docs are needed per appointment type:
-      //   Prep 1: only HI needed (OHA not yet required)
+      //   Prep 1: HI + Consult Note needed (OHA not yet required)
       //   Taper: neither needed
       //   Everything else: both HI and OHA needed
       const isPrep1 = label === "Prep 1";
       const isTaper = calType === "Taper";
       const hiNeeded = !isTaper;
       const ohaNeeded = !isTaper && !isPrep1;
+      const consultNeeded = isPrep1;
 
       const hiOk = info.hi === "Reviewed";
       const ohaOk = ["Signed", "Reviewed"].includes(info.oha);
+      const consultOk = info.consult_note.toLowerCase() === "yes";
       // Only two states: Ready (green) or Missing (red).
       let status: "green" | "red";
       if (isTaper) {
         status = "green";
       } else if (isPrep1) {
-        status = hiOk ? "green" : "red";
+        status = hiOk && consultOk ? "green" : "red";
       } else {
         status = hiOk && ohaOk ? "green" : "red";
       }
@@ -417,6 +422,8 @@ export async function GET() {
         hi_needed: hiNeeded,
         oha_needed: ohaNeeded,
         program: info.program,
+        consult_note: info.consult_note,
+        consult_needed: consultNeeded,
         status,
         medically_complex: medicallyComplex,
       });

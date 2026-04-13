@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getClientCache, getIntakes, updateIntakeFields, upsertClientCache } from "@/lib/db";
 import {
   GHL_FIELDS,
+  GHL_CONTACT_FIELDS,
   GhlRateLimitError,
   PIPELINE_ID,
   STAGE_MAP,
@@ -9,6 +10,7 @@ import {
   getAppUrl,
   searchPipelineOpportunities,
   fetchOpportunityDetails,
+  fetchContactById,
   parseHiStatus,
   parseOhaStatus,
 } from "@/lib/ghl";
@@ -34,6 +36,7 @@ function buildClient(
   cfs: SearchOppCustomField[],
   intakeByEmail: Map<string, { id: string; risk_tier: string; risk_tier_explanation: string; hard_contraindications: unknown[]; soft_score: number; soft_details: string[]; edited_risk_strat: string | null; approved_by: string | null; approved_at: string | null }>,
   platformBase: string,
+  contactCfs?: SearchOppCustomField[],
 ): Client {
   const contact = opp.contact || {};
   const name =
@@ -91,6 +94,7 @@ function buildClient(
     intake_url: intakeId ? `${platformBase}/intakes/${intakeId}/readonly` : "",
     won_date: fmtDate(cfVal(cfs, GHL_FIELDS.WON_DATE_OPP)),
     program: cfVal(cfs, GHL_FIELDS.PROGRAM),
+    consult_note: contactCfs ? cfVal(contactCfs, GHL_CONTACT_FIELDS.CONSULT_NOTE) : "",
   };
 }
 
@@ -128,9 +132,9 @@ export async function POST() {
     // Note: `program` does NOT need a backfill — it's returned by
     // /opportunities/search (text field), so the unchanged branch's
     // buildClient() call picks it up from searchCfs on the next sync.
-    const cacheNeedsBackfill = prevCache?.clients.some((c) => c.won_date === undefined) ?? false;
+    const cacheNeedsBackfill = prevCache?.clients.some((c) => c.won_date === undefined || c.consult_note === undefined) ?? false;
     if (cacheNeedsBackfill) {
-      console.log("[clients-sync] Cache missing won_date — forcing full refetch");
+      console.log("[clients-sync] Cache missing fields — forcing full refetch");
     }
     const prevByOppId = new Map<string, Client>();
     if (prevCache && !cacheNeedsBackfill) {
@@ -190,6 +194,7 @@ export async function POST() {
       client.integ1 = cached.integ1;
       client.integ2 = cached.integ2;
       client.won_date = cached.won_date;
+      client.consult_note = cached.consult_note || "";
       clients.push(client);
     }
 
@@ -209,13 +214,19 @@ export async function POST() {
 
       const results = await Promise.allSettled(
         batch.map(async (opp) => {
-          const detail = await fetchOpportunityDetails(opp.id);
+          const contactId = (opp.contact as Record<string, unknown>)?.id as string | undefined;
+          const [detail, contact] = await Promise.all([
+            fetchOpportunityDetails(opp.id),
+            contactId ? fetchContactById(contactId) : Promise.resolve({} as Record<string, unknown>),
+          ]);
           const cfs = (detail.customFields || []) as SearchOppCustomField[];
+          const contactCfs = ((contact as Record<string, unknown>).customFields || []) as SearchOppCustomField[];
           return buildClient(
             { id: opp.id, contact: opp.contact as Record<string, unknown>, pipelineStageId: opp.pipelineStageId },
             cfs,
             intakeByEmail,
             platformBase,
+            contactCfs,
           );
         }),
       );

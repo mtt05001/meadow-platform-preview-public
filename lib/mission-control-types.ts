@@ -10,6 +10,8 @@ export interface McEvent {
   hi_needed: boolean;
   oha_needed: boolean;
   program: string;
+  consult_note: string;
+  consult_needed: boolean;
   status: "green" | "yellow" | "red";
   medically_complex?: boolean;
 }

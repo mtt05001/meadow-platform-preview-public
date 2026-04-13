@@ -91,6 +91,9 @@ function EventRow({ ev }: { ev: McEvent }) {
   const programLabel = ev.program || "Standard Journey";
   const hiPill = pillClass(ev.hi, ev.hi_needed);
   const ohaPill = pillClass(ev.oha, ev.oha_needed);
+  const consultPill = ev.consult_needed
+    ? (ev.consult_note.toLowerCase() === "yes" ? "ok" : "miss")
+    : "na";
 
   return (
     <div className="grid grid-cols-[1fr_110px] px-5 py-3.5 border-b border-border/50 last:border-b-0 hover:bg-cream-warm/50 transition-colors">
@@ -131,6 +134,11 @@ function EventRow({ ev }: { ev: McEvent }) {
             className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[ohaPill]}`}
           >
             OHA: {ev.oha}
+          </span>
+          <span
+            className={`text-sm px-2.5 py-0.5 rounded-full font-semibold ${PILL_STYLES[consultPill]}`}
+          >
+            CN: {ev.consult_note || "None"}
           </span>
           <span className="text-sm font-medium text-bark-light">
             Journey: {formatJourneyDate(ev.journey)}
