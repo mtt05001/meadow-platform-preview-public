@@ -17,7 +17,6 @@ const isFacilitatorRoute = createRouteMatcher([
   "/clients",
   "/api/clients",
   "/api/facilitator",
-  "/screening",
 ]);
 
 const forbidden = () =>
