@@ -5,8 +5,13 @@ export const PATHWAY_DEMO_USER_ID = "00000000-0000-4000-a000-000000000001";
 
 const STORAGE_KEY = "meadow_pathway_demo_v1";
 
+/** True when pathway should skip Supabase OTP and server APIs (demo flag, or no Supabase configured). */
 export function isPathwayDemo(): boolean {
-  return process.env.NEXT_PUBLIC_PATHWAY_DEMO === "true";
+  if (process.env.NEXT_PUBLIC_PATHWAY_DEMO === "true") return true;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() ?? "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ?? "";
+  if (!url || !key) return true;
+  return false;
 }
 
 function mergePathwayState(saved: Partial<PathwayState>): PathwayState {
