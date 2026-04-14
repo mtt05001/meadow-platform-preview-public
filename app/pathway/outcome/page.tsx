@@ -4,11 +4,11 @@ import { useRouter } from "next/navigation";
 import { usePathway } from "@/components/pathway/pathway-provider";
 
 export default function OutcomePage() {
-  const { state, userId } = usePathway();
+  const { userId, isDemo } = usePathway();
   const router = useRouter();
 
   const handleContinue = async () => {
-    if (userId) {
+    if (!isDemo && userId) {
       await fetch("/api/pathway/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

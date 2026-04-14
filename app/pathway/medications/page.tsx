@@ -7,7 +7,7 @@ import { MedPickerPathway } from "@/components/pathway/med-picker-pathway";
 import type { PathwayMedication } from "@/lib/pathway-types";
 
 export default function MedicationsPage() {
-  const { state, dispatch, saveStep, userId } = usePathway();
+  const { state, dispatch, saveStep, userId, isDemo } = usePathway();
   const router = useRouter();
   const [meds, setMeds] = useState<PathwayMedication[]>(state.medications);
   const [notes, setNotes] = useState(state.additionalNotes);
@@ -26,7 +26,7 @@ export default function MedicationsPage() {
     });
     dispatch({ type: "SET_NOTES", notes: notes.trim() });
 
-    if (userId) {
+    if (!isDemo && userId) {
       await fetch("/api/pathway/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +39,7 @@ export default function MedicationsPage() {
   };
 
   const handleSkip = async () => {
-    if (userId) {
+    if (!isDemo && userId) {
       await fetch("/api/pathway/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

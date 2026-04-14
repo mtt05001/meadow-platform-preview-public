@@ -1,20 +1,34 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { usePathway } from "@/components/pathway/pathway-provider";
+import { isPathwayDemo } from "@/lib/pathway-demo";
+import { STEP_ROUTES } from "@/lib/pathway-types";
 
 type Phase = "email" | "otp";
 
 export default function PathwayEmailPage() {
-  const { dispatch, goNext, saveStep } = usePathway();
+  const { state, dispatch, goNext, saveStep } = usePathway();
+  const router = useRouter();
+  const demo = isPathwayDemo();
   const [phase, setPhase] = useState<Phase>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const supabase = createClient();
+
+  useEffect(() => {
+    if (demo && state.currentStep > 1) {
+      const route = STEP_ROUTES[state.currentStep - 1];
+      if (route) router.replace(route);
+    }
+  }, [demo, state.currentStep, router]);
+
+  useEffect(() => {
+    if (state.answers.email) setEmail(state.answers.email);
+  }, [state.answers.email]);
 
   const handleEmailSubmit = async () => {
     const trimmed = email.trim().toLowerCase();
@@ -22,10 +36,20 @@ export default function PathwayEmailPage() {
       setError("Please enter a valid email address.");
       return;
     }
+
+    if (demo) {
+      dispatch({ type: "SET_EMAIL", email: trimmed });
+      dispatch({ type: "SET_STEP", step: 2 });
+      goNext();
+      return;
+    }
+
     setLoading(true);
     setError("");
 
     try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: trimmed,
         options: { shouldCreateUser: true },
@@ -84,6 +108,8 @@ export default function PathwayEmailPage() {
     setError("");
 
     try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email: email.trim().toLowerCase(),
         token,
@@ -123,6 +149,8 @@ export default function PathwayEmailPage() {
     setLoading(true);
     setError("");
     try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
       await supabase.auth.signInWithOtp({
         email: email.trim().toLowerCase(),
         options: { shouldCreateUser: true },
@@ -291,9 +319,17 @@ export default function PathwayEmailPage() {
             className="text-[#1a4d2e]/30 text-[12px] mt-6 text-center leading-relaxed"
             style={{ fontFamily: "var(--font-sans)" }}
           >
-            We&rsquo;ll send a verification code to confirm your email.
-            <br />
-            Your information is kept confidential.
+            {demo ? (
+              <>
+                Demo: no email is sent. Enter any address to continue the preview.
+              </>
+            ) : (
+              <>
+                We&rsquo;ll send a verification code to confirm your email.
+                <br />
+                Your information is kept confidential.
+              </>
+            )}
           </p>
         </div>
       </div>

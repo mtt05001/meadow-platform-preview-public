@@ -4,17 +4,16 @@ import { useEffect } from "react";
 import { usePathway } from "@/components/pathway/pathway-provider";
 
 export default function DisqualifiedPage() {
-  const { userId } = usePathway();
+  const { userId, isDemo } = usePathway();
 
   useEffect(() => {
-    if (userId) {
-      fetch("/api/pathway/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId }),
-      }).catch(console.error);
-    }
-  }, [userId]);
+    if (isDemo || !userId) return;
+    fetch("/api/pathway/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId }),
+    }).catch(console.error);
+  }, [userId, isDemo]);
 
   return (
     <div className="min-h-[calc(100dvh-4px)] flex flex-col bg-[#f5f1eb]">

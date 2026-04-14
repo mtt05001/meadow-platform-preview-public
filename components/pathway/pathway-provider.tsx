@@ -11,7 +11,6 @@ import {
   type Dispatch,
 } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
   INITIAL_PATHWAY_STATE,
   STEP_ROUTES,
@@ -19,7 +18,12 @@ import {
   type PathwayMedication,
   type PathwayOutcome,
 } from "@/lib/pathway-types";
-import { routePathway, isDisqualifiedAtStep } from "@/lib/pathway-routing";
+import {
+  isPathwayDemo,
+  initPathwayStateForEnv,
+  saveDemoPathwayState,
+  PATHWAY_DEMO_USER_ID,
+} from "@/lib/pathway-demo";
 
 type Action =
   | { type: "SET_EMAIL"; email: string }
@@ -71,6 +75,7 @@ interface PathwayContextValue {
   dispatch: Dispatch<Action>;
   userId: string | null;
   saving: boolean;
+  isDemo: boolean;
   goToStep: (step: number) => void;
   goNext: () => void;
   goBack: () => void;
@@ -86,15 +91,24 @@ export function usePathway() {
 }
 
 export function PathwayProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, INITIAL_PATHWAY_STATE);
+  const [state, dispatch] = useReducer(reducer, INITIAL_PATHWAY_STATE, initPathwayStateForEnv);
   const [userId, setUserId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  const demo = isPathwayDemo();
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    if (demo) {
+      setUserId(PATHWAY_DEMO_USER_ID);
+      setHydrated(true);
+      return;
+    }
+
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient();
+      return supabase.auth.getUser();
+    }).then(({ data }) => {
       if (data.user) {
         setUserId(data.user.id);
         fetch(`/api/pathway/save?user_id=${data.user.id}`)
@@ -134,11 +148,17 @@ export function PathwayProvider({ children }: { children: ReactNode }) {
       } else {
         setHydrated(true);
       }
-    });
-  }, []);
+    }).catch(() => setHydrated(true));
+  }, [demo]);
+
+  useEffect(() => {
+    if (!demo || !hydrated) return;
+    saveDemoPathwayState(state);
+  }, [demo, hydrated, state]);
 
   const saveStep = useCallback(
     async (fields: Record<string, unknown>) => {
+      if (demo) return;
       if (!userId) return;
       setSaving(true);
       try {
@@ -153,7 +173,7 @@ export function PathwayProvider({ children }: { children: ReactNode }) {
         setSaving(false);
       }
     },
-    [userId],
+    [demo, userId],
   );
 
   const goToStep = useCallback(
@@ -189,7 +209,7 @@ export function PathwayProvider({ children }: { children: ReactNode }) {
 
   return (
     <PathwayContext.Provider
-      value={{ state, dispatch, userId, saving, goToStep, goNext, goBack, saveStep }}
+      value={{ state, dispatch, userId, saving, isDemo: demo, goToStep, goNext, goBack, saveStep }}
     >
       {children}
     </PathwayContext.Provider>
