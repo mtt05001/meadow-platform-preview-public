@@ -5,11 +5,15 @@ import { NextResponse } from "next/server";
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/api/intakes/webhook",
+  "/api/medication-intake",
   "/intakes/:id/readonly",
   "/api/intakes/:id/readonly",
   "/api/intakes/:id/pdf",
   "/schedule",
   "/api/schedule",
+  "/pathway(.*)",
+  "/api/pathway(.*)",
+  "/apply",
 ]);
 
 // Routes accessible to facilitators (and admins)
@@ -17,6 +21,8 @@ const isFacilitatorRoute = createRouteMatcher([
   "/clients",
   "/api/clients",
   "/api/facilitator",
+  "/screening",
+  "/api/medication-submissions(.*)",
 ]);
 
 const forbidden = () =>
