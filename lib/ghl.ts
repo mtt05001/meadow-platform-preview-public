@@ -35,6 +35,18 @@ export const GHL_CONTACT_FIELDS = {
 
 export const PIPELINE_ID = "b1raXFqNeALdRrsQwPD5";
 
+/** Core Journey pipeline (env override for Capacity / reporting). */
+export function getCapacityPipelineId(): string {
+  return process.env.GHL_PIPELINE_ID || PIPELINE_ID;
+}
+
+export function getCapacityFieldIds(): { journey: string; facilitator: string } {
+  return {
+    journey: process.env.GHL_JOURNEY_FIELD_ID || GHL_FIELDS.JOURNEY_DATE,
+    facilitator: process.env.GHL_FACILITATOR_FIELD_ID || GHL_FIELDS.LEAD_FACILITATOR,
+  };
+}
+
 export const STAGE_MAP: Record<string, { order: number; name: string; group: "onboarding" | "prep" | "journey" | "integration" | "done" }> = {
   "59b0882d-8ba7-414e-8b30-ba8eb8b81758": { order: 1, name: "Onboarding", group: "onboarding" },
   "f9d83167-1471-4291-a333-2dd12d3a670f": { order: 2, name: "Ready for Prep 1", group: "prep" },
@@ -69,8 +81,8 @@ export function cfVal(
 }
 
 function getToken(): string {
-  const token = process.env.GHL_ACCESS_TOKEN;
-  if (!token) throw new Error("GHL_ACCESS_TOKEN not set");
+  const token = process.env.GHL_API_KEY || process.env.GHL_ACCESS_TOKEN;
+  if (!token) throw new Error("GHL_ACCESS_TOKEN or GHL_API_KEY not set");
   return token;
 }
 
@@ -259,12 +271,20 @@ export type SearchOpp = {
   contact: { id: string; name?: string; firstName?: string; lastName?: string; email?: string; phone?: string };
   pipelineStageId: string;
   updatedAt?: string;
+  status?: string;
+  pipelineId?: string;
   customFields?: SearchOppCustomField[];
+};
+
+export type SearchPipelineOptions = {
+  /** When set, passed to GHL search; results also filtered client-side if `status` is present on rows. */
+  status?: "won" | "open" | "lost" | "abandoned";
 };
 
 /** Paginated search for all opportunities in a pipeline. */
 export async function searchPipelineOpportunities(
   pipelineId: string,
+  options?: SearchPipelineOptions,
 ): Promise<SearchOpp[]> {
   const allOpps: SearchOpp[] = [];
   let page = 1;
@@ -275,10 +295,17 @@ export async function searchPipelineOpportunities(
       limit: "100",
       page: String(page),
     });
+    if (options?.status) params.set("status", options.status);
     const data = (await ghlFetch(`/opportunities/search?${params}`)) as {
       opportunities?: SearchOpp[];
     };
-    const opps = data.opportunities || [];
+    let opps = data.opportunities || [];
+    if (options?.status === "won") {
+      const anyKnown = opps.some((o) => Boolean(o.status));
+      if (anyKnown) {
+        opps = opps.filter((o) => (o.status || "").toLowerCase() === "won");
+      }
+    }
     if (!opps.length) break;
     allOpps.push(...opps);
     if (opps.length < 100) break;

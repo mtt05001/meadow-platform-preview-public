@@ -7,6 +7,7 @@ import type { UserRole } from "@/lib/auth";
 import type { AiFeedback } from "@/lib/types";
 import Nav from "@/components/nav";
 import { toast } from "sonner";
+import Link from "next/link";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,23 @@ export default function AdminPage() {
       <Nav subtitle="Admin" sticky />
 
       <main className="max-w-[960px] mx-auto px-6 md:px-8 py-8">
+        <Card className="mb-8 border-[#1a4d2e]/15 bg-white/90 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-[#1a4d2e]">Facilitator capacity</CardTitle>
+            <CardDescription>
+              Sales routing and journey load across facilitators (GHL + saved weekly caps).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link
+              href="/admin/capacity"
+              className="inline-flex text-sm font-semibold text-[#2d7a4a] underline-offset-2 hover:underline"
+            >
+              Open capacity dashboard →
+            </Link>
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="team">
           <TabsList variant="line" className="mb-8">
             <TabsTrigger value="team" className="text-[14px] px-4">

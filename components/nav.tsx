@@ -9,7 +9,7 @@ import {
   Users,
   Gauge,
   BarChart3,
-  CalendarDays,
+  LayoutDashboard,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -26,7 +26,7 @@ const navLinks: NavLink[] = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/mission-control", label: "Mission Control", icon: Gauge, minRole: "admin" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, minRole: "admin" },
-  // { href: "/schedule", label: "Schedule", icon: CalendarDays }, // Removed from admin portal — will move to facilitator/client portals
+  { href: "/admin/capacity", label: "Capacity", icon: LayoutDashboard, minRole: "admin" },
   { href: "/admin", label: "Admin", icon: Settings, minRole: "admin" },
 ];
 
@@ -64,7 +64,10 @@ export default function Nav({
 
         <div className="flex items-center gap-1">
           {visibleLinks.map(({ href, label, icon: Icon }) => {
-            const active = pathname.startsWith(href);
+            const active =
+              href === "/admin"
+                ? pathname === "/admin" || pathname === "/admin/"
+                : pathname.startsWith(href);
             return (
               <Link
                 key={href}

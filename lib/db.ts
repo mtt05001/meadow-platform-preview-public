@@ -341,3 +341,53 @@ export async function getAllFeedback(): Promise<(AiFeedback & { client_name: str
     client_name: (r.client_name as string) || "Unknown",
   }));
 }
+
+// ── Facilitator capacity overrides (Admin Capacity dashboard) ─────────
+
+export interface FacilitatorCapRow {
+  facilitator_name: string;
+  week_cap: number;
+  updated_at: string;
+}
+
+/** All stored caps. Returns empty map if table is missing (migration not applied yet). */
+export async function getFacilitatorCaps(): Promise<Map<string, number>> {
+  const m = new Map<string, number>();
+  try {
+    const { rows } = await pool().query(
+      `SELECT facilitator_name, week_cap FROM facilitator_caps`,
+    );
+    for (const r of rows) {
+      m.set(r.facilitator_name as string, Number(r.week_cap));
+    }
+  } catch (e: unknown) {
+    const msg = String(e);
+    if (msg.includes("42P01") || msg.toLowerCase().includes("does not exist")) {
+      return m;
+    }
+    throw e;
+  }
+  return m;
+}
+
+export async function upsertFacilitatorCap(
+  facilitatorName: string,
+  weekCap: number,
+): Promise<FacilitatorCapRow> {
+  const { rows } = await pool().query(
+    `INSERT INTO facilitator_caps (facilitator_name, week_cap, updated_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (facilitator_name) DO UPDATE SET
+       week_cap = EXCLUDED.week_cap,
+       updated_at = NOW()
+     RETURNING facilitator_name, week_cap, updated_at`,
+    [facilitatorName, weekCap],
+  );
+  const r = rows[0];
+  return {
+    facilitator_name: r.facilitator_name as string,
+    week_cap: Number(r.week_cap),
+    updated_at:
+      r.updated_at instanceof Date ? r.updated_at.toISOString() : String(r.updated_at),
+  };
+}
