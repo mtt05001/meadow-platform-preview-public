@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { getFacilitatorCaps } from "@/lib/db";
 import { fetchCapacityOpportunities } from "@/lib/capacity-fetch";
 import { buildCapacitySnapshot } from "@/lib/capacity-engine";
@@ -11,7 +10,6 @@ const TTL_MS = 5 * 60 * 1000;
 let cache: { at: number; body: unknown } | null = null;
 
 export async function GET(req: NextRequest) {
-  await auth.protect();
   const refresh = req.nextUrl.searchParams.get("refresh") === "1";
   const now = Date.now();
   if (!refresh && cache && now - cache.at < TTL_MS) {

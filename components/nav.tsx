@@ -18,7 +18,7 @@ interface NavLink {
   href: string;
   label: string;
   icon: LucideIcon;
-  minRole?: UserRole; // omit = everyone can see
+  minRole?: UserRole;
 }
 
 const navLinks: NavLink[] = [
@@ -26,11 +26,53 @@ const navLinks: NavLink[] = [
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/mission-control", label: "Mission Control", icon: Gauge, minRole: "admin" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, minRole: "admin" },
-  { href: "/admin/capacity", label: "Capacity", icon: LayoutDashboard, minRole: "admin" },
+  { href: "/capacity", label: "Capacity", icon: LayoutDashboard },
   { href: "/admin", label: "Admin", icon: Settings, minRole: "admin" },
 ];
 
-export default function Nav({
+function NavPublic({
+  subtitle,
+  sticky,
+}: {
+  subtitle?: string;
+  sticky?: boolean;
+}) {
+  const pathname = usePathname();
+  return (
+    <nav
+      className={`bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)] ${sticky ? "sticky top-0 z-40" : ""}`}
+    >
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
+        <Link href="/" className="flex items-center gap-4 no-underline">
+          <div className="select-none text-[28px] leading-none" aria-hidden>
+            🌿
+          </div>
+          <div>
+            <h1 className="text-[20px] font-semibold leading-tight tracking-[0.5px] text-white">
+              Meadow Medicine
+            </h1>
+            <p className="text-[13px] italic text-white/70">{subtitle}</p>
+          </div>
+        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            href="/capacity"
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium no-underline transition-all ${
+              pathname.startsWith("/capacity")
+                ? "bg-white/15 text-white"
+                : "text-white/65 hover:bg-white/10 hover:text-white"
+            }`}
+          >
+            <LayoutDashboard className="h-3.5 w-3.5" />
+            Capacity
+          </Link>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function NavClerk({
   subtitle = "Health Intake Review Platform",
   sticky = false,
 }: {
@@ -49,16 +91,16 @@ export default function Nav({
     <nav
       className={`bg-[#1a4d2e] shadow-[0_2px_12px_rgba(0,0,0,0.15)] ${sticky ? "sticky top-0 z-40" : ""}`}
     >
-      <div className="max-w-[1400px] mx-auto px-6 md:px-8 py-4 flex items-center justify-between">
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 md:px-8">
         <Link href="/" className="flex items-center gap-4 no-underline">
-          <div className="text-[28px] leading-none select-none" aria-hidden>
+          <div className="select-none text-[28px] leading-none" aria-hidden>
             🌿
           </div>
           <div>
-            <h1 className="text-white text-[20px] font-semibold tracking-[0.5px] leading-tight">
+            <h1 className="text-[20px] font-semibold leading-tight tracking-[0.5px] text-white">
               Meadow Medicine
             </h1>
-            <p className="text-white/70 text-[13px] italic">{subtitle}</p>
+            <p className="text-[13px] italic text-white/70">{subtitle}</p>
           </div>
         </Link>
 
@@ -72,10 +114,10 @@ export default function Nav({
               <Link
                 key={href}
                 href={href}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium no-underline transition-all flex items-center gap-1.5 ${
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium no-underline transition-all ${
                   active
                     ? "bg-white/15 text-white"
-                    : "text-white/65 hover:text-white hover:bg-white/10"
+                    : "text-white/65 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -90,4 +132,11 @@ export default function Nav({
       </div>
     </nav>
   );
+}
+
+export default function Nav(props: { subtitle?: string; sticky?: boolean }) {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return <NavPublic {...props} />;
+  }
+  return <NavClerk {...props} />;
 }

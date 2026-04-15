@@ -64,7 +64,7 @@ export default function AdminPage() {
           </CardHeader>
           <CardContent>
             <Link
-              href="/admin/capacity"
+              href="/capacity"
               className="inline-flex text-sm font-semibold text-[#2d7a4a] underline-offset-2 hover:underline"
             >
               Open capacity dashboard →

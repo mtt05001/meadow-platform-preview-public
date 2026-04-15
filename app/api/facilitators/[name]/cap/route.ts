@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { upsertFacilitatorCap } from "@/lib/db";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { isClerkEnabled } from "@/lib/clerk-env";
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ name: string }> },
 ) {
-  await auth.protect();
+  if (isClerkEnabled()) {
+    await auth.protect();
+  }
   try {
     const { name: rawName } = await params;
     const facilitatorName = decodeURIComponent(rawName).replace(/\+/g, " ");

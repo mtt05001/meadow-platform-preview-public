@@ -1,6 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { getRoleFromClaims } from "@/lib/auth";
+import { isClerkEnabled } from "@/lib/clerk-env";
 import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
@@ -14,6 +16,9 @@ const isPublicRoute = createRouteMatcher([
   "/pathway(.*)",
   "/api/pathway(.*)",
   "/apply",
+  "/capacity",
+  "/api/capacity",
+  "/admin/capacity",
 ]);
 
 // Routes accessible to facilitators (and admins)
@@ -28,7 +33,7 @@ const isFacilitatorRoute = createRouteMatcher([
 const forbidden = () =>
   NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-export default clerkMiddleware(async (auth, request) => {
+const clerkMiddlewareFn = clerkMiddleware(async (auth, request) => {
   if (isPublicRoute(request)) return;
 
   const { sessionClaims } = await auth.protect();
@@ -44,6 +49,14 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Admins can access everything
 });
+
+/** When Clerk env is unset (e.g. preview), skip auth so public routes like /capacity work. */
+export default function proxy(request: NextRequest, event: NextFetchEvent) {
+  if (!isClerkEnabled()) {
+    return NextResponse.next();
+  }
+  return clerkMiddlewareFn(request, event);
+}
 
 export const config = {
   matcher: [
