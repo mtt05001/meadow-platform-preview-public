@@ -49,6 +49,8 @@ export interface CapacitySnapshot {
     cells: { count: number; firstNames: string[]; tone: "green" | "amber" | "red" }[][];
   };
   flags: string[];
+  /** Non-fatal messages (e.g. GHL env not set — UI shows empty data + banner). */
+  warnings?: string[];
 }
 
 function stageBucket(stageId: string): "pre" | "post" | "complete" {

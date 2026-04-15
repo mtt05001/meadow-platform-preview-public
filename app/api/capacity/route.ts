@@ -3,6 +3,7 @@ import { getFacilitatorCaps } from "@/lib/db";
 import { fetchCapacityOpportunities } from "@/lib/capacity-fetch";
 import { buildCapacitySnapshot } from "@/lib/capacity-engine";
 import { apiError, getErrorMessage } from "@/lib/api-utils";
+import { isGhlConfigured } from "@/lib/ghl";
 
 export const maxDuration = 120;
 
@@ -16,11 +17,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cache.body);
   }
   try {
-    const opps = await fetchCapacityOpportunities();
+    const ghlOk = isGhlConfigured();
+    const opps = ghlOk ? await fetchCapacityOpportunities() : [];
     const dbCaps = await getFacilitatorCaps();
     const snapshot = buildCapacitySnapshot(opps, dbCaps, new Date());
-    cache = { at: now, body: snapshot };
-    return NextResponse.json(snapshot);
+    const body = ghlOk
+      ? snapshot
+      : {
+          ...snapshot,
+          warnings: [
+            "Go High Level is not configured on this deployment (set GHL_ACCESS_TOKEN or GHL_API_KEY in the server environment). Showing facilitator defaults and saved caps only — no live opportunities.",
+          ],
+        };
+    cache = { at: now, body };
+    return NextResponse.json(body);
   } catch (e) {
     return apiError(getErrorMessage(e));
   }

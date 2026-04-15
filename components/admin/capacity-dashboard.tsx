@@ -79,6 +79,21 @@ export default function CapacityDashboard() {
 
   return (
     <div className="space-y-8">
+      {data.warnings && data.warnings.length > 0 ? (
+        <Card className="border-amber-300 bg-amber-50/90">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base text-amber-950">Configuration notice</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-amber-950/90">
+              {data.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-[#1a4d2e]/70">
           Last updated {formatShort(data.revalidatedAt)} · Refreshes every 5 min

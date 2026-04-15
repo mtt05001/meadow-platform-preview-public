@@ -80,6 +80,14 @@ export function cfVal(
   return "";
 }
 
+/** True when server can call LeadConnector (private key or OAuth token). */
+export function isGhlConfigured(): boolean {
+  return Boolean(
+    (process.env.GHL_API_KEY && process.env.GHL_API_KEY.trim()) ||
+      (process.env.GHL_ACCESS_TOKEN && process.env.GHL_ACCESS_TOKEN.trim()),
+  );
+}
+
 function getToken(): string {
   const token = process.env.GHL_API_KEY || process.env.GHL_ACCESS_TOKEN;
   if (!token) throw new Error("GHL_ACCESS_TOKEN or GHL_API_KEY not set");
